@@ -1,9 +1,0 @@
-{
-  "auth": {
-    "hosts": {
-      "localhost:5174": {
-        "asked": true
-      }
-    }
-  }
-}
