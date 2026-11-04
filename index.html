@@ -216,8 +216,8 @@ input.ba{width:min(420px,80%);accent-color:var(--blue)}
 <div class="overlay" id="projectOverlay"><div class="modal" role="dialog" aria-modal="true">
   <h3>Start a project — any project</h3><p>Anything that renders in a browser: a site, an app, a poster, a dashboard. Your team works on the real files.</p>
   <label for="npName">Project name</label><input id="npName" placeholder="e.g. Bloom — flower shop">
-  <label for="npType">What is it?</label>
-  <select id="npType"><option value="website">Website</option><option value="app">Mobile app</option><option value="poster">Poster / print</option><option value="dashboard">Dashboard</option><option value="slides">Slides / pitch deck</option><option value="shop">Shop</option><option value="react">React app (Vite) — real framework</option><option value="python">Python tool — runs & reports</option><option value="mac">Mac app (Swift) — build screen</option><option value="unity">Unity game — build screen</option></select>
+  <label for="npType">What is it? (optional — Muse can decide)</label>
+  <select id="npType"><option value="auto" selected>Let Muse decide — recommended</option><option value="website">Website</option><option value="app">Mobile app</option><option value="poster">Poster / print</option><option value="dashboard">Dashboard</option><option value="slides">Slides / pitch deck</option><option value="shop">Shop</option><option value="react">React app (Vite) — real framework</option><option value="python">Python tool — runs & reports</option><option value="mac">Mac app (Swift) — build screen</option><option value="unity">Unity game — build screen</option></select>
   <label>Colour mood</label>
   <div class="swatches" id="swatches">
     <button data-c="#0071E3" style="background:#0071E3" class="on" type="button" aria-label="Blue"></button>
@@ -585,7 +585,7 @@ $("npSubmit").onclick=async()=>{
     const r=await api("/api/projects","POST",{name, type:$("npType").value, color:newColor, desc:$("npDesc").value.trim(), template:selectedTemplate});
     curProject=r.project.id; selectedId=null; viewingHash=null; agentFilter=null;
     $("projectOverlay").classList.remove("open"); $("npName").value=""; $("npDesc").value="";
-    await load(); toast("Created as real files. It's rendered in the middle — add a request to begin.");
+    await load(); toast(r.project.typeReason ? `${r.project.typeReason} It's rendered in the middle — add a request to begin.` : "Created as real files. It's rendered in the middle — add a request to begin.");
   }catch(e){ toast(e.message); }
   btn.disabled=false; btn.textContent="Create project";
 };

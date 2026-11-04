@@ -158,8 +158,30 @@ async function runApp(p) {
     const binDir = stdout.trim().split("\n").pop();
     const bins = fs.readdirSync(binDir).filter((f) => { try { const st = fs.statSync(path.join(binDir, f)); return st.isFile() && (st.mode & 0o111) && !f.endsWith(".dSYM"); } catch { return false; } }).sort((a, b) => a.length - b.length);
     if (!bins.length) throw new Error("Build finished but no runnable app was found in " + binDir);
-    await launchDetached(path.join(binDir, bins[0]), []);
-    p.run = { ok: true, at: Date.now(), log: `Opened ${bins[0]} on this Mac` };
+    /* Kill earlier invisible instances of THIS project's app, then package a real
+       .app bundle and open it via LaunchServices — a raw SwiftPM binary launched
+       directly can run faceless (no visible window, no Dock presence). */
+    try { await run("pkill", ["-f", dir], { timeout: 10000 }); } catch { /* none running */ }
+    await new Promise((r) => setTimeout(r, 400));
+    const appName = p.name.split("—")[0].trim() || "MakerApp";
+    const bundle = path.join(dir, "Build", slug(appName) + ".app");
+    const macosDir = path.join(bundle, "Contents", "MacOS");
+    fs.mkdirSync(macosDir, { recursive: true });
+    fs.copyFileSync(path.join(binDir, bins[0]), path.join(macosDir, bins[0]));
+    try { fs.chmodSync(path.join(macosDir, bins[0]), 0o755); } catch { /* already executable */ }
+    fs.writeFileSync(path.join(bundle, "Contents", "Info.plist"), `<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0"><dict><key>CFBundleName</key><string>${escXml(appName)}</string><key>CFBundleDisplayName</key><string>${escXml(appName)}</string><key>CFBundleExecutable</key><string>${escXml(bins[0])}</string><key>CFBundleIdentifier</key><string>local.musemaker.${slug(appName)}</string><key>CFBundlePackageType</key><string>APPL</string><key>CFBundleShortVersionString</key><string>1.0</string><key>LSMinimumSystemVersion</key><string>13.0</string><key>NSHighResolutionCapable</key><true/></dict></plist>\n`);
+    await launchDetached("open", [bundle]);
+    let pid = null;
+    for (let i = 0; i < 8 && !pid; i++) { try { const { stdout: pg } = await run("pgrep", ["-f", bundle], { timeout: 10000 }); pid = pg.trim().split("\n")[0]; } catch { await new Promise((r) => setTimeout(r, 500)); } }
+    if (!pid) throw new Error("The build is fine, but the app quit right after opening — it likely crashed on launch. Ask a subagent to look at the app code next.");
+    let winNote = "window opened";
+    try {
+      await run("osascript", ["-e", `tell application "System Events" to tell (first application process whose unix id is ${pid}) to set visible to true`], { timeout: 15000 });
+      await run("osascript", ["-e", `tell application "System Events" to tell (first application process whose unix id is ${pid}) to set frontmost to true`], { timeout: 15000 });
+      const { stdout: wi } = await run("osascript", ["-e", `tell application "System Events" to tell (first application process whose unix id is ${pid}) to return (count of windows)`], { timeout: 15000 });
+      if (Number(wi.trim()) < 1) winNote = "app is running but macOS reports no window yet";
+    } catch { winNote = "opened (couldn't verify the window — macOS automation permission)"; }
+    p.run = { ok: true, at: Date.now(), log: `Opened ${appName} on this Mac — ${winNote}` };
     save(); return p.run;
   }
   if (p.kind === "unity") {
@@ -680,10 +702,45 @@ async function runChecker(t, p) {
 }
 
 /* ---------- project / task actions ---------- */
+const TYPE_LABELS = { website: "Website", app: "Mobile app", poster: "Poster", dashboard: "Dashboard", slides: "Slides", shop: "Shop", react: "React app", python: "Python tool", mac: "Mac app", unity: "Unity game" };
+const TYPE_RULES = [
+  ["mac", 3, /\b(mac|macos|osx|swift|swiftui|menu ?bar|desktop app|native app)\b/i, "you mentioned a Mac/desktop app"],
+  ["unity", 3, /\bunity\b/i, "you mentioned Unity"],
+  ["unity", 2, /\b(game|platformer|shooter|arcade|puzzle game|rpg)\b/i, "it sounds like a game"],
+  ["python", 3, /\b(python|script|scraper|automation|automate|csv|command[- ]line|cli)\b/i, "it sounds like a script/tool"],
+  ["react", 3, /\b(react|vite|next\.?js)\b/i, "you mentioned React"],
+  ["poster", 2, /\b(poster|flyer|album cover|gig)\b/i, "it sounds like a poster"],
+  ["slides", 2, /\b(slides|pitch deck|presentation|keynote|deck)\b/i, "it sounds like slides"],
+  ["dashboard", 2, /\b(dashboard|analytics|metrics|admin panel|stats)\b/i, "it sounds like a dashboard"],
+  ["shop", 2, /\b(shop|store|e-?commerce|sell|checkout|products)\b/i, "it sounds like a shop"],
+  ["app", 2, /\b(mobile app|iphone|ios app|android|phone app)\b/i, "it sounds like a phone app"],
+  ["app", 1, /\bapp\b/i, "you called it an app"],
+  ["website", 1, /\b(website|landing page|homepage|blog)\b/i, "it sounds like a website"]
+];
+function classifyByRules(text) {
+  const scores = {};
+  for (const [type, weight, re, why] of TYPE_RULES) if (re.test(text)) { scores[type] = (scores[type] || 0) + weight; scores[type + ":why"] = why; }
+  const ranked = Object.keys(scores).filter((k) => !k.includes(":")).sort((a, b) => scores[b] - scores[a]);
+  if (!ranked.length || scores[ranked[0]] === scores[ranked[1]]) return null;
+  return { type: ranked[0], why: scores[ranked[0] + ":why"] };
+}
+async function classifyType(name, desc, requested) {
+  if (requested && requested !== "auto" && TYPE_LABELS[requested]) return { type: requested, reason: null };
+  const rule = classifyByRules(`${name} ${desc || ""}`);
+  if (rule) return { type: rule.type, reason: `Read as ${TYPE_LABELS[rule.type]} — ${rule.why}.` };
+  if (MUSE_OK !== false) {
+    const r = await museRun({ workspace: ROOT, model: PLANNER_MODEL, readOnly: true, timeoutMs: 120000, maxSteps: 2,
+      prompt: `A user wants to start a new project in Muse Maker. Name: "${name}". Description: "${desc || ""}". Which ONE category fits best? website (a site/page), app (phone-style app), poster (print/poster), dashboard (numbers/admin), slides (pitch/presentation), shop (selling things), react (a React web app), python (a Python script/tool that runs and reports), mac (a native Mac app), unity (a Unity game). Reply with ONLY this JSON: {"type":"one of those words","why":"at most 8 words"}.` });
+    if (r?.text) { try { const j = JSON.parse(r.text.match(/\{[\s\S]*\}/)[0]); if (TYPE_LABELS[j.type]) return { type: j.type, reason: `Muse read this as ${TYPE_LABELS[j.type]} — ${String(j.why || "").slice(0, 60)}.` }; } catch { /* fall through */ } }
+  }
+  return { type: "website", reason: "Read as Website — nothing pointed anywhere else." };
+}
 async function createProject({ name, type, color, desc, template }) {
+  const decided = await classifyType(name, desc, type);
+  type = decided.type;
   const isReact = type === "react";
   const kind = { python: "python", mac: "mac", unity: "unity" }[type] || "web";
-  const p = { id: uid("p"), dir: slug(name) + "-" + Date.now().toString(36), name, type: ["website", "app", "poster", "dashboard", "slides", "shop", "react", "python", "mac", "unity"].includes(type) ? type : "website", kind, color: color || "#0071E3", desc: desc || "A new project, ready for your team.", createdAt: Date.now(), budget: 0, ...(isReact ? { framework: "vite-react", setup: "installing" } : {}) };
+  const p = { id: uid("p"), dir: slug(name) + "-" + Date.now().toString(36), name, type, kind, ...(decided.reason ? { typeReason: decided.reason } : {}), color: color || "#0071E3", desc: desc || "A new project, ready for your team.", createdAt: Date.now(), budget: 0, ...(isReact ? { framework: "vite-react", setup: "installing" } : {}) };
   const dir = projDir(p); fs.mkdirSync(dir, { recursive: true });
   const writeFiles = (files) => { for (const [rel, content] of Object.entries(files)) { const fp = path.join(dir, rel); fs.mkdirSync(path.dirname(fp), { recursive: true }); fs.writeFileSync(fp, content); } };
   if (isReact) writeFiles(reactFiles(p.name, p.color, p.desc));

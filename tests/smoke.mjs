@@ -161,5 +161,12 @@ for (const [type, kind] of [["mac", "mac"], ["unity", "unity"]]) {
   }
 }
 
+/* Auto category: Muse Maker decides from the words (rule-hit case, zero Muse tokens) */
+{
+  const ac = await req("POST", "/api/projects", { name: "Calc Auto", type: "auto", desc: "a simple calculator for macOS" });
+  check("auto decides Mac app from macOS", ac.status === 201 && ac.json.project.type === "mac" && ac.json.project.kind === "mac" && (ac.json.project.typeReason || "").includes("Mac app"), ac.json.project.typeReason || "");
+  if (ac.json?.project?.id) await req("DELETE", `/api/projects/${ac.json.project.id}`);
+}
+
 console.log(failures ? `\n${failures} FAILURE(S)` : "\nALL PASS");
 process.exit(failures ? 1 : 0);
