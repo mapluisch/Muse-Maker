@@ -37,7 +37,7 @@ Muse only — no third-party APIs, no keys stored. Every agent is a headless Mus
 
 ## Any visual project — not one hardcoded app
 
-The center canvas renders the *real project files* — anything browser-renderable belongs there. Create from scratch in six flavours: **Website, Mobile app, Poster, Dashboard, Slides, Shop** (`+ New project`: name, type, template, colour mood, one-line description). Each type ships starting templates (Coffee shop, Portfolio, Festival, Pitch…) so a new project already looks like something; Blank canvas is always there. Regression-check the non-AI paths any time with `npm test` (server must be running; spends no Muse tokens). One real project (**Aurora**, a coffee brand site) is seeded so the first open already has history; everything else you create yourself. **Try it live** makes the preview clickable so you can use the project, not just look at it; **Download** exports the single-file HTML.
+The center canvas renders the *real project files* — anything browser-renderable belongs there. Create from scratch in many flavours: **Website, Mobile app, Poster, Dashboard, Slides, Shop, React (Vite)** — plus non-web projects: **Python tool** (runs `main.py`, its generated report renders live and clickable in the middle), **Mac app (SwiftUI)** and **Unity game**, which show the latest build's screen (a real `screenshot.png` if present, else the `ui.svg` sketch from source) with build status and log; the **Build** button runs the real build on this Mac (`python3`, `swift build`, or headless Unity). Live click-mirroring into native apps is not there yet — the picture is. (`+ New project`: name, type, template, colour mood, one-line description.) Each web type ships starting templates (Coffee shop, Portfolio, Festival, Pitch…) so a new project already looks like something; Blank canvas is always there. Regression-check the non-AI paths any time with `npm test` (server must be running; spends no Muse tokens). **Try it live** makes the preview truly clickable so you can use the project, not just look at it; **Full screen** blows the app screen up (Esc or the button exits); **Download** exports the project.
 
 ## Try this flow (60 seconds)
 
@@ -46,6 +46,22 @@ The center canvas renders the *real project files* — anything browser-renderab
 3. Read the one-line *what changed*, the token cost, and the line diff → **Approve**, **Ask for a tweak**, or **Undo step**.
 4. Scrub **History** below the canvas to look back; **Restore** re-saves any step on top.
 5. **+ New request** in plain English → the Spark superagent assigns it and queues it → **Run queue in order**.
+
+## What millions of Muse users need — gap audit
+
+| Need | Status |
+|---|---|
+| Bring my *existing* project, not just start new ones | **Now:** Import folder (copies in, keeps its git history, renders immediately) |
+| A cost ceiling — agents must not burn unbounded tokens | **Now:** per-project token budget; over-budget steps skip Muse, use the free local fallback, and say so. Planner also degrades to rules over budget |
+| Don't corrupt my history when steps collide | **Now:** one running step per project, enforced server-side |
+| Feels like Apple/Meta software | **Now:** SF typography, frosted glass, dark mode (◐, persisted), focus rings, `⌘K` new request, `Esc` closes dialogs, review count in the tab title |
+| First-run that teaches itself | **Now:** empty-state onboarding with one-tap starter projects |
+| See/approve changes visually, safely, reversibly | Was already the core: Before/After renders, Noor check, timeline restore |
+| Cloud sync, accounts, team collaboration | Not yet — local-first by design; the honest next frontier |
+| Framework projects (React) | **Now:** Vite + React from scratch or imported — npm install + build run by Muse Maker, built output previewed, per-step build snapshots for Before/After, broken builds discarded |
+| Per-step screenshots | **Now:** headless Chrome (already on the Mac) captures every step; thumbnails live on the history timeline, older steps can be captured on demand |
+| Notifications | **Now:** browser Notifications (macOS banners via Chrome/Safari) when a step lands in *For you* — click one to jump straight to that change. Poll-based, permission-first |
+| Native (non-web) apps, mobile companion | Not yet |
 
 ## What's real
 

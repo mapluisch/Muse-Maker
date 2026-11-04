@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Muse Maker — See what your agents built</title>
+<script>try{const t=localStorage.getItem("mm-theme");if(t)document.documentElement.dataset.theme=t;}catch(e){}</script>
 <style>
 :root{--bg:#F5F5F7;--ink:#1D1D1F;--sub:#86868B;--faint:#AEAEB2;--blue:#0071E3;--blue-hover:#0077ED;--green:#34C759;--orange:#FF9F0A;--glass:rgba(255,255,255,.72);--glass-strong:rgba(255,255,255,.88);--hair:rgba(0,0,0,.07);--shadow:0 4px 24px rgba(0,0,0,.06),0 1px 3px rgba(0,0,0,.04);--shadow-lg:0 24px 64px rgba(0,0,0,.14)}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
@@ -29,17 +30,23 @@ header{position:sticky;top:0;z-index:60;background:var(--glass);backdrop-filter:
 .group{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);padding:12px 18px 2px}
 .task-list{padding:2px 8px 10px}
 .task{display:flex;gap:10px;width:100%;text-align:left;background:transparent;border:0;border-radius:12px;padding:9px 10px;align-items:flex-start}.task:hover{background:rgba(120,120,128,.08)}.task.sel{background:#fff;box-shadow:0 1px 5px rgba(0,0,0,.08)}
-.qnum{width:20px;height:20px;border-radius:50%;background:#E8E8ED;font-size:11px;font-weight:800;display:grid;place-items:center;flex:none;margin-top:1px}.qnum.review{background:rgba(255,159,10,.25);color:#9A6700}.qnum.done{background:rgba(52,199,89,.2);color:#248A3D}
+.qnum{width:20px;height:20px;border-radius:50%;background:#E8E8ED;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;flex:none;margin-top:1px;text-align:center}.qnum.review{background:rgba(255,159,10,.25);color:#9A6700}.qnum.done{background:rgba(52,199,89,.2);color:#248A3D}
 .task b{font-size:13.5px;font-weight:600;line-height:1.35;display:block;letter-spacing:-.01em}.task span{font-size:12px;color:var(--sub);display:block;margin-top:2px;line-height:1.4}
 .task .mini{font-size:11px;color:var(--blue);background:none;border:0;padding:2px 4px;font-weight:700}
 .bar{height:3px;background:rgba(120,120,128,.18);border-radius:99px;margin-top:7px;overflow:hidden}.bar i{display:block;height:100%;background:var(--blue);transition:width .5s}
 .empty{padding:20px 18px;font-size:13px;color:var(--sub);text-align:center;line-height:1.5}
 .canvas-card{overflow:hidden;border-radius:24px}
 .canvas-top{display:flex;align-items:center;gap:10px;padding:12px 16px;flex-wrap:wrap}.canvas-top .addr{font-size:12.5px;color:var(--sub);background:rgba(120,120,128,.1);border-radius:8px;padding:5px 12px}
-.stage{background:#FBFBFD;border-top:1px solid var(--hair);padding:22px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.stage{background:#FBFBFD;border-top:1px solid var(--hair);padding:22px;display:flex;flex-direction:column;align-items:center;gap:14px;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;touch-action:none}
+.stage ::selection{background:transparent}
+.handle,.knob,input.ba{-webkit-tap-highlight-color:transparent;touch-action:none;-webkit-user-select:none;user-select:none}
 .frame{background:#fff;border-radius:14px;box-shadow:var(--shadow-lg);overflow:hidden;position:relative;width:100%;max-width:700px;height:470px}
 .frame.phone{max-width:340px;height:560px;border-radius:30px}.frame.poster{max-width:400px;height:540px}
 .frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff;pointer-events:none}
+.fs-exit{position:absolute;top:10px;right:10px;z-index:9;display:none;background:rgba(29,29,31,.85);color:#fff;border:0;border-radius:999px;padding:8px 14px;font-size:12.5px;font-weight:700;cursor:pointer;backdrop-filter:blur(8px)}
+#frame:fullscreen{max-width:none;width:100%;height:100%;border-radius:0}
+#frame:fullscreen .fs-exit{display:block}
+#frame:fullscreen iframe{background:#fff}
 .handle{position:absolute;top:0;bottom:0;width:1.5px;background:var(--blue);z-index:6;cursor:ew-resize}.knob{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:34px;height:34px;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.22);border:.5px solid var(--hair);user-select:none}
 input.ba{width:min(420px,80%);accent-color:var(--blue)}
 .stage-note{font-size:12.5px;color:var(--sub);text-align:center;max-width:540px;line-height:1.5}
@@ -47,7 +54,7 @@ input.ba{width:min(420px,80%);accent-color:var(--blue)}
 .timeline h4{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);margin:0 0 10px}
 .steps{display:flex;gap:6px;align-items:flex-start;overflow-x:auto;padding-bottom:4px}
 .step{flex:none;width:118px;text-align:left;background:none;border:0;padding:0}
-.step i{width:22px;height:22px;border-radius:50%;background:#E8E8ED;font-style:normal;font-size:11px;font-weight:800;display:grid;place-items:center;margin-bottom:5px}
+.step i{width:22px;height:22px;border-radius:50%;background:#E8E8ED;font-style:normal;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;margin-bottom:5px;text-align:center}
 .step.on i{background:var(--ink);color:#fff}.step.view i{background:var(--blue);color:#fff}
 .step span{font-size:11px;color:var(--sub);line-height:1.3;display:block;height:28px;overflow:hidden}
 .histbar{display:none;width:100%;max-width:700px;background:#FFF8EC;border:1px solid rgba(255,159,10,.4);border-radius:12px;padding:10px 14px;font-size:13px;align-items:center;gap:10px;flex-wrap:wrap}
@@ -58,11 +65,21 @@ input.ba{width:min(420px,80%);accent-color:var(--blue)}
 .who{font-size:12.5px;color:var(--sub)}.checked{font-size:12.5px;color:#248A3D}.spacer{flex:1}
 .status-word{font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:rgba(255,159,10,.16);color:#9A6700;white-space:nowrap}.status-word.doing{background:rgba(0,113,227,.12);color:var(--blue)}.status-word.done{background:rgba(52,199,89,.15);color:#248A3D}.status-word.todo{background:rgba(120,120,128,.14);color:#636366}
 .agent{display:flex;gap:11px;align-items:center;padding:9px 18px;width:100%;background:none;border:0;text-align:left}.agent:hover{background:rgba(120,120,128,.06)}.agent.sel{background:#fff;box-shadow:inset 0 0 0 1px var(--hair)}
-.av{width:34px;height:34px;border-radius:50%;color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;flex:none}
+.av{width:34px;height:34px;border-radius:50%;color:#fff;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;line-height:1;flex:none;overflow:hidden;vertical-align:middle}
+.agent .av,.avatars .av,.feed-item .av{display:inline-flex;align-items:center;justify-content:center}
+.av svg{width:58%;height:58%;display:block;flex:none;margin:auto}
+.av-sm{width:26px;height:26px}
+.agent{cursor:pointer}
+.agent .mini{font-size:12px;color:var(--sub);background:none;border:0;padding:4px 6px;font-weight:700;border-radius:6px}
+.agent .mini:hover{background:rgba(120,120,128,.15);color:var(--ink)}
+.icon-pick{width:38px;height:38px;border-radius:10px;border:1px solid var(--hair);display:grid;place-items:center;cursor:pointer;padding:0}
+.icon-pick svg{width:20px;height:20px}
+.icon-pick.on{box-shadow:0 0 0 2px var(--blue)}
 .av-mira{background:#E4573D}.av-kai{background:#0071E3}.av-noor{background:#30A46C}.av-leo{background:#8E8E93}.av-you{background:#1D1D1F}
 .agent b{font-size:13.5px;font-weight:600;display:block}.agent span{font-size:12px;color:var(--sub);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:118px}
 .agent .st{margin-left:auto;font-size:11.5px;color:var(--sub);white-space:nowrap}
-.feed{padding:4px 18px 14px}.feed p{font-size:12.5px;color:#3A3A3C;line-height:1.5;padding:7px 0;border-top:1px solid var(--hair)}.feed p:first-child{border-top:0}.feed time{color:var(--faint);font-size:11.5px}
+.feed{padding:4px 14px 14px}.feed-item{display:flex;gap:9px;padding:8px 4px;border-top:1px solid var(--hair);align-items:flex-start}.feed-item:first-child{border-top:0}.feed-item p{font-size:12.5px;color:#3A3A3C;line-height:1.45;margin:0}.feed-item p b{color:var(--ink)}.feed time{color:var(--faint);font-size:11.5px;white-space:nowrap}
+[data-theme="dark"] .feed-item p{color:#D1D1D6}
 .banner{margin:10px 12px 4px;background:#FFF8EC;border:1px solid rgba(255,159,10,.35);border-radius:14px;padding:11px 13px;font-size:12.5px;line-height:1.45;width:calc(100% - 24px);text-align:left}.banner b{display:block;font-size:13px}
 .overlay{position:fixed;inset:0;background:rgba(245,245,247,.5);backdrop-filter:blur(14px);z-index:80;display:none;place-items:center;padding:20px}.overlay.open{display:grid}
 .modal{background:var(--glass-strong);backdrop-filter:blur(24px) saturate(180%);border:1px solid var(--hair);border-radius:22px;box-shadow:var(--shadow-lg);width:min(480px,100%);padding:24px}
@@ -74,6 +91,18 @@ input.ba{width:min(420px,80%);accent-color:var(--blue)}
 .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,90px);background:rgba(29,29,31,.92);color:#fff;border-radius:999px;padding:11px 20px;font-size:13.5px;font-weight:600;box-shadow:var(--shadow-lg);transition:transform .35s;z-index:99;max-width:92vw;text-align:center}.toast.show{transform:translate(-50%,0)}
 .foot-note{max-width:1440px;margin:0 auto;padding:0 22px 28px;font-size:12px;color:var(--faint);line-height:1.6}
 .err{display:none;max-width:1440px;margin:14px auto 0;padding:12px 18px;background:#FCECEA;border:1px solid #F3C2BE;border-radius:12px;font-size:13px}.err.show{display:block}
+/* dark mode — system-style, project previews stay as authored */
+:root[data-theme="dark"]{--bg:#000;--ink:#F5F5F7;--sub:#98989D;--faint:#636366;--glass:rgba(28,28,30,.75);--glass-strong:rgba(30,30,32,.9);--hair:rgba(255,255,255,.13);--shadow:0 4px 24px rgba(0,0,0,.5);--shadow-lg:0 24px 64px rgba(0,0,0,.6)}
+[data-theme="dark"] .btn{background:#2C2C2E;color:var(--ink)}[data-theme="dark"] .btn:hover{background:#3A3A3C}
+[data-theme="dark"] .btn-primary{background:var(--blue);color:#fff}[data-theme="dark"] .btn-dark{background:#F5F5F7;color:#000}
+[data-theme="dark"] .seg button.on{background:#48484A;color:#fff}[data-theme="dark"] .task.sel,[data-theme="dark"] .agent.sel{background:#2C2C2E}
+[data-theme="dark"] .task:hover,[data-theme="dark"] .agent:hover{background:rgba(255,255,255,.06)}
+[data-theme="dark"] .stage{background:#111113}[data-theme="dark"] .timeline{background:#1C1C1E}
+[data-theme="dark"] .modal input,[data-theme="dark"] .modal textarea,[data-theme="dark"] .modal select{background:#1C1C1E;color:var(--ink);border-color:rgba(255,255,255,.2)}
+[data-theme="dark"] .addr,[data-theme="dark"] .brain{background:rgba(255,255,255,.1)}
+[data-theme="dark"] .review .what{color:#D1D1D6}[data-theme="dark"] .banner{background:#2A2118;color:#F5D9A8}
+[data-theme="dark"] .qnum{background:#3A3A3C;color:var(--ink)}[data-theme="dark"] .wordmark i{background:#F5F5F7}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -83,19 +112,34 @@ input.ba{width:min(420px,80%);accent-color:var(--blue)}
   <span class="brain" id="brainBadge">Connecting…</span>
   <div class="seg" id="plannerSeg" style="margin-left:0" title="Which Muse plans your queue. Spark is cheaper; Wonder plans deeper."><button data-pm="muse-spark-1.3" type="button">Planner · Spark</button><button data-pm="muse-wonder-1.0" type="button">Wonder</button></div>
   <span class="live"><i></i><span id="liveText">Team</span></span>
+  <button class="btn btn-sm" id="themeBtn" type="button" title="Dark / light">◐</button>
+  <button class="btn btn-sm" id="notifyBtn" type="button" title="Get a Mac notification when a step is ready for your eyes">Notify me</button>
   <button class="btn btn-ghost" id="runNextBtn" type="button">Run queue in order</button>
   <button class="btn btn-primary" id="openRequest" type="button">+ New request</button>
 </div></header>
 
 <div class="err" id="errBox">This page needs the Muse Maker server. Start it with <b>node server.mjs</b>, then reload.</div>
 
-<div class="projbar">
+<div class="projbar" id="projbar">
   <div><h1 id="projName">Loading…</h1><p class="type" id="projType"></p></div>
   <div class="seg" id="projSeg"></div>
+  <button class="btn btn-ghost" id="budgetBtn" type="button">Budget</button>
   <button class="btn btn-ghost" id="delProj" type="button" style="color:#B3261E">Delete</button>
 </div>
 
-<main class="layout">
+<section id="onboard" style="display:none;max-width:760px;margin:8vh auto 40px;padding:0 22px;text-align:center">
+  <h1 style="font-size:42px;letter-spacing:-.03em;line-height:1.08">Create something<br>you can see.</h1>
+  <p style="color:var(--sub);font-size:16px;line-height:1.6;margin-top:14px">Describe it in plain English. A team of Muse agents builds it step by step — and you approve every change by looking at it, not reading about it.</p>
+  <div style="display:flex;gap:8px;justify-content:center;margin-top:24px;flex-wrap:wrap">
+    <button class="btn btn-primary" id="obCreate" type="button" style="padding:11px 22px;font-size:15px">Start a project</button>
+    <button class="btn" data-idea="bakery" type="button" style="padding:11px 18px">A bakery site</button>
+    <button class="btn" data-idea="habits" type="button" style="padding:11px 18px">A habit app</button>
+    <button class="btn" data-idea="festival" type="button" style="padding:11px 18px">A festival poster</button>
+  </div>
+  <p style="color:var(--faint);font-size:12.5px;margin-top:18px">Already have a project? Start a project → Import folder at the bottom. Press ⌘K any time for a new request.</p>
+</section>
+
+<main class="layout" id="mainLayout">
   <section class="card" aria-label="Requests">
     <div class="card-h"><h2>Requests</h2><span class="n" id="taskCount"></span><button class="link" id="addQuick" type="button">+ Add</button></div>
     <p style="padding:2px 18px 4px;font-size:12px;color:var(--sub);line-height:1.5">Your superagent orders this queue and assigns each step. Use ↑ ↓ to reorder.</p>
@@ -106,7 +150,9 @@ input.ba{width:min(420px,80%);accent-color:var(--blue)}
     <div class="canvas-top">
       <span class="addr" id="addr">—</span>
       <button class="btn btn-sm" id="interactBtn" type="button">Try it live</button>
+      <button class="btn btn-sm" id="fsBtn" type="button">Full screen</button>
       <button class="btn btn-sm" id="downloadBtn" type="button">Download</button>
+      <button class="btn btn-sm" id="rebuildBtn" type="button" style="display:none">Rebuild</button>
       <div class="seg" id="modeSeg" style="margin-left:auto">
         <button data-mode="before" type="button">Before</button>
         <button data-mode="slider" class="on" type="button">Compare</button>
@@ -118,10 +164,11 @@ input.ba{width:min(420px,80%);accent-color:var(--blue)}
         <iframe id="frameBefore" title="Before"></iframe>
         <iframe id="frameAfter" title="After"></iframe>
         <div class="handle" id="handle"><span class="knob">‹ ›</span></div>
+        <button class="fs-exit" id="fsExit" type="button">✕ Exit full screen</button>
       </div>
       <input type="range" class="ba" id="baRange" min="0" max="100" value="58" aria-label="Before and after comparison">
       <p class="stage-note" id="stageNote"></p>
-      <div class="histbar" id="histbar"><span id="histText" style="flex:1"></span><button class="btn btn-sm" id="histLatest" type="button">Back to latest</button><button class="btn btn-dark btn-sm" id="histRestore" type="button">Restore this step</button></div>
+      <div class="histbar" id="histbar"><span id="histText" style="flex:1"></span><button class="btn btn-sm" id="histShot" type="button">Save screenshot</button><button class="btn btn-sm" id="histLatest" type="button">Back to latest</button><button class="btn btn-dark btn-sm" id="histRestore" type="button">Restore this step</button></div>
       <div class="timeline"><h4 id="histTitle">History — every step is saved. Tap one to look back.</h4><div class="steps" id="steps"></div></div>
     </div>
     <div class="review" id="review"></div>
@@ -129,7 +176,7 @@ input.ba{width:min(420px,80%);accent-color:var(--blue)}
 
   <aside class="col-team">
     <section class="card" aria-label="Team">
-      <div class="card-h"><h2>Team</h2><span class="n">tap to filter</span></div>
+      <div class="card-h"><h2>Team</h2><span class="n">tap to filter · ✎ to edit</span><button class="link" id="addAgentBtn" type="button">+ Add</button></div>
       <div id="agentList"></div>
       <div id="reviewBanner"></div>
       <div class="card-h" style="padding-top:14px"><h2>Just now</h2></div>
@@ -144,7 +191,7 @@ input.ba{width:min(420px,80%);accent-color:var(--blue)}
   <h3>What should your team do?</h3><p>The superagent will order it and assign the right person. You'll see a visual before anything ships.</p>
   <label for="reqText">Your request</label><textarea id="reqText" placeholder="Make the headline “Coffee worth slowing down for” and use a warm orange…"></textarea>
   <label for="reqAgent">Who should do it?</label>
-  <select id="reqAgent"><option value="">Let the superagent decide</option><option value="mira">Mira — Designer</option><option value="kai">Kai — Builder</option><option value="noor">Noor — Checker</option><option value="leo">Leo — Tester</option></select>
+  <select id="reqAgent"><option value="">Let the superagent decide</option></select>
   <p id="planNote" style="margin-top:12px"></p>
   <div class="row"><button class="btn" data-close type="button">Cancel</button><button class="btn btn-primary" id="reqSubmit" type="button">Send to team</button></div>
 </div></div>
@@ -153,7 +200,7 @@ input.ba{width:min(420px,80%);accent-color:var(--blue)}
   <h3>Start a project — any project</h3><p>Anything that renders in a browser: a site, an app, a poster, a dashboard. Your team works on the real files.</p>
   <label for="npName">Project name</label><input id="npName" placeholder="e.g. Bloom — flower shop">
   <label for="npType">What is it?</label>
-  <select id="npType"><option value="website">Website</option><option value="app">Mobile app</option><option value="poster">Poster / print</option><option value="dashboard">Dashboard</option><option value="slides">Slides / pitch deck</option><option value="shop">Shop</option></select>
+  <select id="npType"><option value="website">Website</option><option value="app">Mobile app</option><option value="poster">Poster / print</option><option value="dashboard">Dashboard</option><option value="slides">Slides / pitch deck</option><option value="shop">Shop</option><option value="react">React app (Vite) — real framework</option><option value="python">Python tool — runs & reports</option><option value="mac">Mac app (Swift) — build screen</option><option value="unity">Unity game — build screen</option></select>
   <label>Colour mood</label>
   <div class="swatches" id="swatches">
     <button data-c="#0071E3" style="background:#0071E3" class="on" type="button" aria-label="Blue"></button>
@@ -165,11 +212,30 @@ input.ba{width:min(420px,80%);accent-color:var(--blue)}
   <label>Start from</label><div id="npTemplates" style="display:flex;gap:6px;flex-wrap:wrap"></div>
   <label for="npDesc">Describe it in one line</label><input id="npDesc" placeholder="A calm studio for booking yoga classes">
   <div class="row"><button class="btn" data-close type="button">Cancel</button><button class="btn btn-dark" id="npSubmit" type="button">Create project</button></div>
+  <div style="border-top:1px solid var(--hair);margin-top:20px;padding-top:4px">
+    <label for="npImportPath">Already have a project on this computer? Import its folder</label>
+    <input id="npImportPath" placeholder="/Users/you/my-existing-site">
+    <p id="npImportMsg" style="font-size:12.5px"></p>
+    <div class="row" style="margin-top:10px"><button class="btn" id="npImportBtn" type="button">Import folder</button></div>
+  </div>
+</div></div>
+
+<!-- Agent editor -->
+<div class="overlay" id="agentOverlay"><div class="modal" role="dialog" aria-modal="true">
+  <h3 id="agTitle">Teammate</h3><p>They'll appear everywhere work is assigned. The superagent reads their role and strengths to route requests.</p>
+  <label for="agName">Name</label><input id="agName" placeholder="e.g. Sofia">
+  <label for="agRole">Role</label><input id="agRole" placeholder="e.g. Designer, Builder, Checker, Tester, Illustrator…">
+  <label for="agSkills">Great at (the superagent uses this to assign)</label><input id="agSkills" placeholder="e.g. motion, icons, playful colour">
+  <label>Colour</label><div class="swatches" id="agColors"></div>
+  <label>Icon</label><div id="agIcons" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+  <p id="agMsg" style="font-size:12.5px;margin-top:10px"></p>
+  <div class="row"><button class="btn" id="agDelete" type="button" style="color:#B3261E;margin-right:auto">Remove</button><button class="btn" data-close type="button">Cancel</button><button class="btn btn-primary" id="agSave" type="button">Save teammate</button></div>
 </div></div>
 
 <div class="toast" id="toast" role="status"></div>
 
 <script>
+const $ = id => document.getElementById(id);
 let S = null, curProject = null, selectedId = null, mode = "slider", compare = 58, agentFilter = null, viewingHash = null, toastTimer = null, newColor = "#0071E3", busy = false, interact = false, selectedTemplate = "blank";
 function renderTemplates(){
   const list=(S?.templates?.[$("npType").value])||[{id:"blank",label:"Blank canvas"}];
@@ -178,8 +244,21 @@ function renderTemplates(){
   $("npTemplates").querySelectorAll("[data-tpl]").forEach(b=>b.onclick=()=>{ selectedTemplate=b.dataset.tpl; const tpl=list.find(t=>t.id===selectedTemplate); if(tpl?.sub) $("npDesc").value=tpl.sub; renderTemplates(); });
 }
 $("npType").addEventListener("change",()=>{ selectedTemplate="blank"; renderTemplates(); });
-const $ = id => document.getElementById(id);
 const proj = () => S?.projects.find(p=>p.id===curProject);
+const ICONS = {
+  spark: '<path fill="#fff" stroke="none" d="M12 2l2.1 6.1L20 10l-5.9 1.9L12 18l-2.1-6.1L4 10l5.9-1.9z"/>',
+  pencil: '<path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>',
+  code: '<path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/>',
+  shield: '<path d="M12 22s8-3.6 8-10V5l-8-3-8 3v7c0 6.4 8 10 8 10z"/><path d="M9 11.5l2 2 4-4.5"/>',
+  flask: '<path d="M9.5 2.5h5M10.5 2.5v5.7L5 18.5A2.4 2.4 0 0 0 7.1 22h9.8a2.4 2.4 0 0 0 2.1-3.5L13.5 8.2V2.5"/><path d="M7.5 15h9"/>',
+  eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>',
+  rocket: '<path d="M4.5 16.5c-1.5 1.3-2 5-2 5s3.7-.5 5-2c.7-.9.7-2.1-.1-2.9a2.2 2.2 0 0 0-2.9-.1z"/><path d="M12 15l-3-3a22 22 0 0 1 2-4A12.9 12.9 0 0 1 22 2c0 2.7-.8 7.5-6 11a22 22 0 0 1-4 2z"/><circle cx="15" cy="9" r="2"/>',
+  star: '<path d="M12 2.5l2.9 5.9 6.6 1-4.7 4.6 1.1 6.5L12 17.4l-5.9 3.1 1.1-6.5L2.5 9.4l6.6-1z"/>'
+};
+const iconSVG = (name) => `<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ICONS.spark}</svg>`;
+const FALLBACK_A = { name: "Former teammate", role: "—", color: "#8E8E93", icon: "spark" };
+const avHTML = (a, small) => `<span class="av${small ? " av-sm" : ""}" style="background:${a?.color || "#8E8E93"}" title="${(a?.name || "").replace(/"/g, "")}">${iconSVG(a?.icon)}</span>`;
+const checkerA = () => { const hit = Object.entries(S?.agents || {}).find(([, a]) => /check/i.test(a.role)); return hit ? hit[1] : (Object.values(S?.agents || {})[0] || FALLBACK_A); };
 const pTasks = () => S ? S.tasks.filter(t=>t.projectId===curProject) : [];
 const queue = () => pTasks().filter(t=>t.status==="todo"||t.status==="doing").sort((a,b)=>a.priority-b.priority||a.createdAt-b.createdAt);
 const selTask = () => pTasks().find(t=>t.id===selectedId) || queue()[0] || pTasks().find(t=>t.status==="review") || pTasks()[0];
@@ -191,8 +270,21 @@ async function api(path, method="GET", body){
   if(!r.ok) throw new Error(d.error||("HTTP "+r.status));
   return d;
 }
+let knownReview = null;
+function notifyNewReviews(){
+  if(!S) return;
+  const now = new Set(S.tasks.filter(t=>t.status==="review").map(t=>t.id));
+  if(knownReview && "Notification" in window && Notification.permission==="granted"){
+    for(const t of S.tasks.filter(x=>x.status==="review" && !knownReview.has(x.id))){
+      const a=S.agents[t.agent]||FALLBACK_A; const pr=S.projects.find(x=>x.id===t.projectId);
+      try{ const n=new Notification(`${a.name} (${a.role}) finished — ready for your eyes`, { body: `${t.title}${pr?` · ${pr.name}`:""}`, tag: t.id }); n.onclick=()=>{ window.focus(); curProject=t.projectId; selectedId=t.id; viewingHash=null; load(); n.close(); }; }catch(e){ /* browser blocked */ }
+    }
+  }
+  knownReview = now;
+}
 async function load(selectLatest){
   S = await api("/api/state");
+  notifyNewReviews();
   if(!proj()) curProject = S.projects[0]?.id;
   const ts = pTasks();
   if(!ts.find(t=>t.id===selectedId)) selectedId = (ts.find(t=>t.status==="review")||queue()[0]||ts[0])?.id || null;
@@ -205,8 +297,8 @@ function renderProjects(){
   $("projSeg").querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{curProject=b.dataset.p; selectedId=null; viewingHash=null; load();});
   $("projSeg").querySelector("[data-new]").onclick=()=>$("projectOverlay").classList.add("open");
   const p=proj(); if(!p) return;
-  $("projName").textContent=p.name; const usage=S.tasks.filter(x=>x.projectId===p.id).reduce((n,x)=>n+(x.tokens||0)+(x.planTokens||0)+(x.check?.tokens||0),0); $("projType").textContent={website:"Website",app:"Mobile app",poster:"Poster",dashboard:"Dashboard",slides:"Slides",shop:"Shop"}[p.type]+" · saved as real files + git"+(usage?` · Muse usage so far: ${(usage/1000).toFixed(1)}k tokens`:"");
-  $("addr").textContent="projects/"+p.dir+"/index.html";
+  $("projName").textContent=p.name; const usage=S.tasks.filter(x=>x.projectId===p.id).reduce((n,x)=>n+(x.tokens||0)+(x.planTokens||0)+(x.check?.tokens||0),0); const isNW2=p.kind==="mac"||p.kind==="unity"; $("rebuildBtn").style.display=(p.framework||isNW2||p.kind==="python")?"inline-block":"none"; $("rebuildBtn").textContent=p.framework?"Rebuild":"Build"; $("projType").textContent={website:"Website",app:"Mobile app",poster:"Poster",dashboard:"Dashboard",slides:"Slides",shop:"Shop",react:"React app (Vite)",python:"Python tool",mac:"Mac app",unity:"Unity game"}[p.type]+(p.framework?(p.setup==="installing"?" · installing packages…":p.setup==="failed"?" · setup failed — try Rebuild":" · built & live"):isNW2?" · shown as latest build screen":p.kind==="python"?" · runs on your Mac, report shown live":"")+" · saved as real files + git"+(usage?` · Muse usage so far: ${(usage/1000).toFixed(1)}k tokens`:"")+(p.budget?` · budget: ${(usage/1000).toFixed(0)}k / ${(p.budget/1000).toFixed(0)}k`:""); $("budgetBtn").textContent=p.budget?`Budget ${(usage/1000).toFixed(0)}k/${(p.budget/1000).toFixed(0)}k`:"Set budget";
+  $("addr").textContent="projects/"+p.dir+(p.kind==="python"?"/main.py → report":isNW2?"":"/index.html");
   $("frame").className="frame"+(p.type==="app"?" phone":p.type==="poster"?" poster":"");
   const b=$("brainBadge");
   b.textContent = S.brain.cli === false ? "Muse CLI not found · local fallback" : S.brain.label;
@@ -214,7 +306,7 @@ function renderProjects(){
   document.querySelectorAll("#plannerSeg button").forEach(x=>{ x.classList.toggle("on", x.dataset.pm===S.brain.plannerModel); x.onclick=async()=>{ if(x.dataset.pm===S.brain.plannerModel) return; await api("/api/settings","POST",{plannerModel:x.dataset.pm}); await load(); toast(x.dataset.pm.includes("wonder")?"Planner is now Muse Wonder — deeper plans, more tokens per plan.":"Planner is Muse Spark — cheaper planning."); }; });
 }
 function taskRow(t, qn){
-  const a=S.agents[t.agent];
+  const a=S.agents[t.agent]||FALLBACK_A;
   return `<button class="task ${t.id===selectedId?"sel":""}" data-t="${t.id}" type="button">
     <span class="qnum ${t.status==="review"?"review":t.status==="done"?"done":""}">${t.status==="done"?"✓":t.status==="review"?"!":qn}</span>
     <span style="flex:1;min-width:0"><b>${t.title}</b><span>${a.name} · ${a.role}${t.status==="doing"?" · working…":""}${t.executorNote?" · local edit":""}</span>${t.executor?`<span>${t.executor.replace("muse:","Muse ")}${t.tokens?` · ${(t.tokens/1000).toFixed(1)}k tokens`:""}${t.diff?` · +${t.diff.add} −${t.diff.del} lines`:""}</span>`:""}
@@ -244,55 +336,75 @@ async function moveTask(id, dir){
   await api(`/api/projects/${curProject}/reorder`,"POST",{order:q.map(t=>t.id)});
   await load(); toast("Queue reordered. The superagent will run them in this order.");
 }
+function setSrc(el, key, url){ if(el.dataset.k!==key){ el.dataset.k=key; el.src=url; } }
+function applyCompare(){
+  const fa=$("frameAfter"); const pct=mode==="before"?100:mode==="after"?0:compare;
+  fa.style.clipPath=`inset(0 0 0 ${pct}%)`; fa.style.display=pct===100?"none":"block";
+  $("handle").style.left=pct+"%"; $("handle").style.display=mode==="slider"&&!viewingHash?"block":"none";
+  const r=$("baRange"); if(document.activeElement!==r) r.value=compare;
+}
 function renderPreview(){
   const p=proj(); if(!p) return; const t=selTask();
   const fb=$("frameBefore"), fa=$("frameAfter");
   fa.style.pointerEvents = interact && !viewingHash ? "auto" : "none"; fb.style.pointerEvents = "none";
-  if(viewingHash){
-    fa.src=`/preview/${p.id}/at/${viewingHash}?v=${bust()}`; fb.src="about:blank";
+  const lastHash=(p.history||[])[(p.history||[]).length-1]?.hash||"none";
+  const isNW = p.kind==="mac"||p.kind==="unity";
+  $("modeSeg").style.display = isNW ? "none" : "";
+  $("interactBtn").style.display = isNW ? "none" : "";
+  if(isNW && interact){ interact=false; $("interactBtn").textContent="Try it live"; }
+  if(isNW){
+    const step = viewingHash ? (p.history||[]).find(h=>h.hash===viewingHash) : null;
+    if(step && step.shot) setSrc(fa, "shot:"+viewingHash, `/api/projects/${p.id}/steps/${viewingHash}/screenshot`);
+    else setSrc(fa, "bv:"+(viewingHash||lastHash), `/preview/${p.id}/buildview?v=${viewingHash||lastHash}`);
+    setSrc(fb, "blank", "about:blank");
+    fa.style.clipPath="none"; fa.style.pointerEvents="none"; $("handle").style.display="none"; $("baRange").style.display="none";
+    const kindWord = p.kind==="mac" ? "Mac app" : "Unity game";
+    $("stageNote").textContent = (step ? `Step ${step.step} — its screen at that moment. ` : `Latest build of your ${kindWord}, as a picture. `) + (p.build ? (p.build.ok ? `Built ${new Date(p.build.at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}. ` : "Last build didn't finish — press Build to see why. ") : "Not built yet — press Build. ") + "The real app runs on your Mac; live clicking into it isn't mirrored yet.";
+  } else if(viewingHash){
+    setSrc(fa, "at:"+viewingHash, `/preview/${p.id}/at/${viewingHash}`); setSrc(fb, "blank", "about:blank");
     fa.style.clipPath="none"; $("handle").style.display="none"; $("baRange").style.display="none";
     $("stageNote").textContent="You're looking back in time. Your current project is untouched.";
   } else {
-    fa.src=`/preview/${p.id}/current?v=${t?.commit||bust()}`;
-    fb.src = t?.commit ? `/preview/${p.id}/before-task/${t.id}?v=${t.commit}` : `/preview/${p.id}/current?v=base`;
-    const pct=mode==="before"?0:mode==="after"?100:compare;
-    fa.style.clipPath=`inset(0 0 0 ${pct}%)`; fa.style.display=pct===0?"none":"block";
-    $("handle").style.left=pct+"%"; $("handle").style.display=mode==="slider"?"block":"none";
-    $("baRange").value=compare; $("baRange").style.display=mode==="slider"?"block":"none";
+    setSrc(fa, "cur:"+lastHash, `/preview/${p.id}/current?v=${lastHash}`);
+    if(t?.commit) setSrc(fb, "bef:"+t.commit, `/preview/${p.id}/before-task/${t.id}?v=${t.commit}`); else setSrc(fb, "base:"+lastHash, `/preview/${p.id}/current?v=base`);
+    $("baRange").style.display=mode==="slider"?"block":"none";
+    applyCompare();
     document.querySelectorAll("#modeSeg button").forEach(b=>b.classList.toggle("on",b.dataset.mode===mode));
     $("stageNote").textContent = t?.commit ? `“${t.title}” — left: before this step · right: after. This is the real rendered project.` : "This is your real project, rendered live. Run a queued step to see its Before / After here.";
   }
   /* history */
   const hist=p.history||[];
   $("histTitle").textContent = hist.length ? `History — ${hist.length} step${hist.length>1?"s":""} saved. Tap one to look back.` : "History — your first step will appear here.";
-  $("steps").innerHTML=hist.map(h=>`<button class="step ${viewingHash===h.hash?"view":h.hash===(hist[hist.length-1]?.hash)&&!viewingHash?"on":""}" data-h="${h.hash}" type="button"><i>${h.step}</i><span>${h.message.replace(/</g,"")}</span></button>`).join("");
+  $("steps").innerHTML=hist.map(h=>`<button class="step ${viewingHash===h.hash?"view":h.hash===(hist[hist.length-1]?.hash)&&!viewingHash?"on":""}" data-h="${h.hash}" type="button">${h.shot?`<img src="/api/projects/${p.id}/steps/${h.hash}/screenshot" alt="Step ${h.step} screenshot" style="width:100%;border-radius:8px;border:1px solid var(--hair);margin-bottom:6px;display:block">`:""}<i>${h.step}</i><span>${h.message.replace(/</g,"")}</span></button>`).join("");
   $("steps").querySelectorAll("[data-h]").forEach(b=>b.onclick=()=>{viewingHash=b.dataset.h===hist[hist.length-1].hash?null:b.dataset.h; renderAll();});
   const viewed=hist.find(h=>h.hash===viewingHash);
   $("histbar").classList.toggle("show", Boolean(viewed));
   if(viewed) $("histText").innerHTML=`<b>Step ${viewed.step}:</b> ${viewed.message.replace(/</g,"")} — viewing only.`;
   $("histLatest").onclick=()=>{viewingHash=null;renderAll();};
+  $("histShot").style.display = viewed && !viewed.shot ? "inline-block" : "none";
+  $("histShot").onclick=async()=>{ if(!viewingHash) return; const b=$("histShot"); b.disabled=true; b.textContent="Saving…"; try{ const r=await api(`/api/projects/${curProject}/screenshot`,"POST",{hash:viewingHash}); if(r.ok){ await load(); toast("Screenshot saved — it's on the timeline now."); } else toast("Screenshot didn't work — is Chrome available?"); }catch(e){ toast(e.message); } b.disabled=false; b.textContent="Save screenshot"; };
   $("histRestore").onclick=async()=>{ if(!viewingHash) return; if(!confirm("Restore this step? It will be saved as a new step on top — nothing is erased.")) return; busy=true; renderReview(); try{ await api(`/api/projects/${curProject}/restore`,"POST",{hash:viewingHash}); viewingHash=null; await load(true); toast("Restored — saved as a new step. History kept."); }catch(e){ toast(e.message); } busy=false; renderAll(); };
 }
 function statusWord(s){ return {review:'<span class="status-word">For you</span>',doing:'<span class="status-word doing">Working</span>',done:'<span class="status-word done">Done</span>',todo:'<span class="status-word todo">Queued</span>'}[s]; }
 function renderReview(){
   const t=selTask(), el=$("review");
   if(!t){ el.innerHTML=`<h3>No request selected</h3><p class="what">Add a request on the left. The superagent will order it, assign it, and show you the visual result here.</p>`; return; }
-  const a=S.agents[t.agent];
+  const a=S.agents[t.agent]||FALLBACK_A;
   let foot="";
   if(t.status==="todo") foot=`<button class="btn btn-primary" id="runBtn" type="button" ${busy?"disabled":""}>${busy?"Working…":"Run this step"}</button><span style="font-size:12.5px;color:var(--sub)">${a.name} will edit the real files. You'll approve the visual after.</span>`;
   if(t.status==="doing") foot=`<span style="font-size:13px;color:var(--blue)">Working on the real files…</span>`;
   if(t.status==="review") foot=`<span style="font-size:12.5px;color:var(--sub)">Compare above, then decide — nothing is final until you approve.</span><span class="spacer"></span><button class="btn" id="tweakBtn" type="button">Ask for a tweak</button><button class="btn" id="undoBtn" type="button">Undo step</button><button class="btn btn-primary" id="approveBtn" type="button">Approve</button>`;
   let checkLine="";
-  if(t.check) checkLine=`<div class="review-foot"><span style="font-size:13px;${t.check.verdict==="pass"?"color:#248A3D":t.check.verdict==="fix"?"color:#9A6700":"color:var(--sub)"}">${t.check.verdict==="pass"?"✓":t.check.verdict==="fix"?"⚠":"·"} <b>Noor checked:</b> ${t.check.note} <span style="color:var(--faint)">(Muse Spark${t.check.tokens?` · ${(t.check.tokens/1000).toFixed(1)}k tokens`:""})</span></span></div>`;
-  else if((t.status==="review"||t.status==="done")&&t.commit) checkLine=`<div class="review-foot"><span style="font-size:12.5px;color:var(--sub)">Not checked yet.</span><button class="btn btn-sm" id="checkBtn" type="button">Ask Noor to check</button></div>`;
+  if(t.check) checkLine=`<div class="review-foot"><span style="font-size:13px;${t.check.verdict==="pass"?"color:#248A3D":t.check.verdict==="fix"?"color:#9A6700":"color:var(--sub)"}">${t.check.verdict==="pass"?"✓":t.check.verdict==="fix"?"⚠":"·"} <b>${checkerA().name} checked:</b> ${t.check.note} <span style="color:var(--faint)">(Muse Spark${t.check.tokens?` · ${(t.check.tokens/1000).toFixed(1)}k tokens`:""})</span></span></div>`;
+  else if((t.status==="review"||t.status==="done")&&t.commit) checkLine=`<div class="review-foot"><span style="font-size:12.5px;color:var(--sub)">Not checked yet.</span><button class="btn btn-sm" id="checkBtn" type="button">Ask ${checkerA().name} to check</button></div>`;
   if(t.status==="done") foot=`<span class="checked">✓ Approved by you — live in the project</span><span class="spacer"></span><button class="btn" id="undoBtn" type="button">Undo step</button>`;
   el.innerHTML=`<div style="display:flex;gap:10px;align-items:flex-start"><h3 style="flex:1">${t.title}</h3>${statusWord(t.status)}</div>
     <p class="what">${t.what||""}</p><p class="why">${t.why||""}</p>
     ${t.reason?`<p class="reason">Superagent: ${t.reason}${t.planTokens?` <span style="color:var(--faint)">(planned by Muse Spark · ${(t.planTokens/1000).toFixed(1)}k tokens)</span>`:""}</p>`:""}${t.executorNote?`<p class="reason">${t.executorNote}</p>`:""}${t.error?`<p class="reason" style="color:#B3261E">${t.error}</p>`:""}
-    <div class="review-foot"><span class="avatars"><span class="av ${a.cls}">${a.ini}</span>${t.check?'<span class="av av-noor">N</span>':""}</span><span class="who">${a.name} · ${a.role}${t.check?" · checked by Noor":""}${t.executor?` · ran on ${t.executor.replace("muse:","Muse ")}`:""}</span></div>
+    <div class="review-foot"><span class="avatars">${avHTML(a)}${t.check?avHTML(checkerA()):""}</span><span class="who">${a.name} · ${a.role}${t.check?` · checked by ${checkerA().name}`:""}${t.executor?` · ran on ${t.executor.replace("muse:","Muse ")}`:""}</span></div>
     ${checkLine}
     <div class="review-foot">${foot}</div>`;
-  const cb=$("checkBtn"); if(cb) cb.onclick=async()=>{ cb.disabled=true; cb.textContent="Noor is checking…"; try{ await api(`/api/tasks/${t.id}/check`,"POST",{}); await load(); toast("Noor finished checking — see her note on the card."); }catch(e){ toast(e.message); cb.disabled=false; cb.textContent="Ask Noor to check"; } };
+  const cb=$("checkBtn"); if(cb) cb.onclick=async()=>{ cb.disabled=true; cb.textContent=checkerA().name+" is checking…"; try{ await api(`/api/tasks/${t.id}/check`,"POST",{}); await load(); toast(checkerA().name+" finished checking — see the note on the card."); }catch(e){ toast(e.message); cb.disabled=false; cb.textContent="Ask "+checkerA().name+" to check"; } };
   const rb=$("runBtn"); if(rb) rb.onclick=runSelected;
   const ap=$("approveBtn"); if(ap) ap.onclick=async()=>{ await api(`/api/tasks/${t.id}/approve`,"POST",{}); await load(); toast("Approved. It's live in your project."); };
   const un=$("undoBtn"); if(un) un.onclick=async()=>{ if(!confirm("Undo this step? The previous version comes back as a new step.")) return; await api(`/api/tasks/${t.id}/undo`,"POST",{}); viewingHash=null; await load(true); toast("Undone — previous version is back."); };
@@ -311,27 +423,84 @@ function renderTeam(){
   const counts={}; pTasks().forEach(t=>{counts[t.agent]=(counts[t.agent]||0)+1;});
   $("agentList").innerHTML=Object.entries(S.agents).map(([k,a])=>{
     const mine=pTasks().filter(t=>t.agent===k); const doing=mine.find(t=>t.status==="doing"); const next=mine.find(t=>t.status==="todo");
-    return `<button class="agent ${agentFilter===k?"sel":""}" data-a="${k}" type="button"><span class="av ${a.cls}">${a.ini}</span><span><b>${a.name}</b><span>${a.role} · ${doing?"on: "+doing.title:next?"next: "+next.title:"free"}</span></span><span class="st">${doing?"● working":next?"queued":"free"}</span></button>`;
+    return `<div class="agent ${agentFilter===k?"sel":""}" data-a="${k}" role="button" tabindex="0">${avHTML(a)}<span><b>${a.name}</b><span>${a.role} · ${doing?"on: "+doing.title:next?"next: "+next.title:"free"}</span></span><span class="st">${doing?"● working":next?"queued":"free"}</span><button class="mini" data-edit="${k}" type="button" title="Edit ${a.name}">✎</button></div>`;
   }).join("");
-  $("agentList").querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>{agentFilter=agentFilter===b.dataset.a?null:b.dataset.a; renderAll();});
+  $("agentList").querySelectorAll("[data-a]").forEach(b=>b.onclick=e=>{ if(e.target.closest("[data-edit]")) return; agentFilter=agentFilter===b.dataset.a?null:b.dataset.a; renderAll(); });
+  $("agentList").querySelectorAll("[data-edit]").forEach(b=>b.onclick=e=>{ e.stopPropagation(); openAgentEditor(b.dataset.edit); });
+  const sel=$("reqAgent"); const cur=sel.value;
+  sel.innerHTML='<option value="">Let the superagent decide</option>'+Object.entries(S.agents).map(([k,a])=>`<option value="${k}">${a.name} — ${a.role}</option>`).join("");
+  sel.value=[...sel.options].some(o=>o.value===cur)?cur:"";
   const n=pTasks().filter(t=>t.status==="review").length;
   $("reviewBanner").innerHTML=n?`<button class="banner" id="bannerBtn" type="button"><b>${n} change${n>1?"s":""} waiting for you</b>Nothing is final until you approve it.</button>`:"";
   const bb=$("bannerBtn"); if(bb) bb.onclick=()=>{const t=pTasks().find(x=>x.status==="review"); if(t){selectedId=t.id; viewingHash=null; renderAll();}};
-  $("feed").innerHTML=S.feed.slice(0,5).map(f=>`<p>${f.text} <time>· ${new Date(f.at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</time></p>`).join("")||`<p>No activity yet.</p>`;
+  $("feed").innerHTML=S.feed.slice(0,7).map(f=>{ const fa=S.agents[f.agent]; const who=fa?fa.name:(f.agent==="you"?"You":"Team"); const text=f.text.includes("<b>")?f.text:`<b>${who}</b> ${f.text}`; return `<div class="feed-item">${fa?avHTML(fa,true):'<span class="av av-sm" style="background:#1D1D1F"><span style="font-size:11px;font-weight:800">You</span></span>'}<p>${text} <time>· ${new Date(f.at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</time></p></div>`; }).join("")||`<p style="font-size:12.5px;color:var(--sub);padding:6px 4px">Quiet for now.</p>`;
   $("liveText").textContent = pTasks().some(t=>t.status==="doing") ? "Working now" : "Team ready";
 }
-function renderAll(){ if(!S) return; renderProjects(); renderTasks(); renderPreview(); renderReview(); renderTeam(); renderTemplates(); }
+function renderAll(){ if(!S) return; const empty=S.projects.length===0; $("onboard").style.display=empty?"block":"none"; $("mainLayout").style.display=empty?"none":"grid"; $("projbar").style.display=empty?"none":"flex"; document.querySelector(".foot-note").style.display=empty?"none":"block"; if(empty){ const b=$("brainBadge"); b.textContent=S.brain.label; b.classList.add("ai"); document.title="Muse Maker — See what your agents built"; return; } renderProjects(); renderTasks(); renderPreview(); renderReview(); renderTeam(); renderTemplates();
+  const n=pTasks().filter(t=>t.status==="review").length; document.title=n?`(${n}) Muse Maker — needs your eyes`:"Muse Maker — See what your agents built"; }
 
 /* compare */
-$("baRange").addEventListener("input",e=>{compare=+e.target.value; if(mode!=="slider")mode="slider"; renderPreview();});
+$("baRange").addEventListener("input",e=>{compare=+e.target.value; if(mode!=="slider"){mode="slider"; document.querySelectorAll("#modeSeg button").forEach(b=>b.classList.toggle("on",b.dataset.mode===mode));} applyCompare();});
 let drag=false;
-$("stage").addEventListener("pointerdown",e=>{ if(mode!=="slider"||viewingHash) return; if(e.target.closest("button,input,.timeline,.histbar")) return; drag=true; move(e); });
+$("stage").addEventListener("pointerdown",e=>{ if(mode!=="slider"||viewingHash) return; if(e.target.closest("button,input,.timeline,.histbar")) return; e.preventDefault(); drag=true; move(e); });
 window.addEventListener("pointermove",e=>{if(drag)move(e);}); window.addEventListener("pointerup",()=>drag=false);
-function move(e){ const r=$("frame").getBoundingClientRect(); compare=Math.max(0,Math.min(100,((e.clientX-r.left)/r.width)*100)); renderPreview(); }
+function move(e){ const r=$("frame").getBoundingClientRect(); compare=Math.max(0,Math.min(100,((e.clientX-r.left)/r.width)*100)); applyCompare(); }
 document.querySelectorAll("#modeSeg button").forEach(b=>b.onclick=()=>{mode=b.dataset.mode; viewingHash=null; renderPreview();});
 $("interactBtn").onclick=()=>{ interact=!interact; $("interactBtn").textContent=interact?"Stop trying · back to Compare":"Try it live"; if(interact){ mode="after"; viewingHash=null; toast("You're trying the real project now. Clicks work. Hit Stop trying to compare again."); } renderPreview(); };
+$("fsBtn").onclick=()=>{ if(document.fullscreenElement) document.exitFullscreen(); else $("frame").requestFullscreen?.().catch(()=>toast("Full screen isn't available here.")); };
+$("fsExit").onclick=()=>{ if(document.fullscreenElement) document.exitFullscreen(); };
+document.addEventListener("fullscreenchange",()=>{ $("fsBtn").textContent=document.fullscreenElement?"Exit full screen":"Full screen"; });
 $("downloadBtn").onclick=()=>{ if(curProject) window.location.href=`/api/projects/${curProject}/download`; };
 $("delProj").onclick=async()=>{ const p=proj(); if(!p) return; if(!confirm(`Delete “${p.name}” and its whole history? This cannot be undone.`)) return; await api(`/api/projects/${p.id}`,"DELETE"); curProject=null; selectedId=null; viewingHash=null; await load(); toast("Project deleted."); };
+$("themeBtn").onclick=()=>{ const next=document.documentElement.dataset.theme==="dark"?"":"dark"; if(next) document.documentElement.dataset.theme=next; else delete document.documentElement.dataset.theme; try{ localStorage.setItem("mm-theme",next); }catch(e){} };
+function syncNotifyBtn(){ const b=$("notifyBtn"); if(!("Notification" in window)){ b.textContent="Notifications unavailable"; b.disabled=true; return; } b.textContent = Notification.permission==="granted" ? "Notifications on" : Notification.permission==="denied" ? "Notifications blocked" : "Notify me"; }
+$("notifyBtn").onclick=async()=>{ if(!("Notification" in window)){ toast("This browser doesn't support notifications."); return; } if(Notification.permission==="denied"){ toast("Notifications are blocked — allow them for localhost in your browser settings, then try again."); return; } const r=await Notification.requestPermission(); syncNotifyBtn(); toast(r==="granted"?"Notifications on — you'll hear when a step needs your eyes.":"Notifications not enabled."); };
+syncNotifyBtn();
+/* ---------- agent editor ---------- */
+let editAgentId = null, editColor = "#0071E3", editIcon = "spark";
+const AG_COLORS = ["#E4573D", "#0071E3", "#30A46C", "#8E8E93", "#FF9F0A", "#AF52DE", "#00C7BE", "#FF6482", "#5E5CE6", "#64D2FF"];
+function renderAgPickers(){
+  $("agColors").innerHTML = AG_COLORS.map(c=>`<button data-c="${c}" style="background:${c}" class="${c===editColor?"on":""}" type="button" aria-label="Colour ${c}"></button>`).join("");
+  $("agColors").querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{ editColor=b.dataset.c; renderAgPickers(); });
+  $("agIcons").innerHTML = Object.keys(ICONS).map(k=>`<button class="icon-pick ${k===editIcon?"on":""}" data-i="${k}" type="button" style="background:${editColor}" title="${k}">${iconSVG(k)}</button>`).join("");
+  $("agIcons").querySelectorAll("[data-i]").forEach(b=>b.onclick=()=>{ editIcon=b.dataset.i; renderAgPickers(); });
+}
+function openAgentEditor(id){
+  editAgentId = id || null;
+  const a = id ? S.agents[id] : null;
+  $("agTitle").textContent = a ? `Edit ${a.name}` : "Add a teammate";
+  $("agName").value = a?.name || ""; $("agRole").value = a?.role || ""; $("agSkills").value = a?.skills || "";
+  editColor = a?.color || AG_COLORS[Object.keys(S.agents).length % AG_COLORS.length]; editIcon = a?.icon || "spark";
+  $("agDelete").style.display = a ? "inline-block" : "none"; $("agMsg").textContent = "";
+  renderAgPickers();
+  $("agentOverlay").classList.add("open"); setTimeout(()=>$("agName").focus(), 60);
+}
+$("addAgentBtn").onclick = () => openAgentEditor(null);
+$("agSave").onclick = async () => {
+  const name = $("agName").value.trim(), role = $("agRole").value.trim();
+  if (!name || !role) { $("agMsg").textContent = "Give them a name and a role first."; $("agMsg").style.color = "#B3261E"; return; }
+  try {
+    await api("/api/agents", "POST", { id: editAgentId || undefined, name, role, skills: $("agSkills").value.trim(), color: editColor, icon: editIcon });
+    $("agentOverlay").classList.remove("open"); await load();
+    toast(editAgentId ? `${name} updated.` : `${name} joined the team — the superagent can now assign to them.`);
+  } catch (e) { $("agMsg").textContent = e.message; $("agMsg").style.color = "#B3261E"; }
+};
+$("agDelete").onclick = async () => {
+  if (!editAgentId) return; const a = S.agents[editAgentId];
+  if (!confirm(`Remove ${a.name} from the team? Their finished work stays; queued work keeps their name as a former teammate.`)) return;
+  try { await api(`/api/agents/${editAgentId}`, "DELETE"); if (agentFilter === editAgentId) agentFilter = null; $("agentOverlay").classList.remove("open"); await load(); toast(`${a.name} removed.`); }
+  catch (e) { $("agMsg").textContent = e.message; $("agMsg").style.color = "#B3261E"; }
+};
+$("rebuildBtn").onclick=async()=>{ if(!curProject) return; const b=$("rebuildBtn"); const isNW3=(proj()?.kind==="mac"||proj()?.kind==="unity"||proj()?.kind==="python"); b.disabled=true; b.textContent="Building…"; try{ const r=await api(`/api/projects/${curProject}/build`,"POST",{}); toast(r.setup==="installing"?"Installing packages — this can take a minute. The page refreshes itself.":isNW3?"Built — the screen in the middle is up to date.":"Rebuilt — your app is live."); await load(true); }catch(e){ toast("Build didn't finish — the note under the screen says why."); await load(); } b.disabled=false; b.textContent=proj()?.framework?"Rebuild":"Build"; };
+/* gentle polling: picks up finished steps / React setup, and fires notifications */
+const sigOf = s => JSON.stringify([s.tasks.map(t=>[t.id,t.status,t.commit]), s.projects.map(p=>[p.id,p.setup])]);
+setInterval(async()=>{ if(busy || document.querySelector(".overlay.open") || !S) return; try{ const fresh=await api("/api/state"); if(sigOf(fresh)!==sigOf(S)){ S=fresh; notifyNewReviews(); if(!proj()) curProject=S.projects[0]?.id; renderAll(); } }catch(e){ /* server momentarily busy */ } }, 20000);
+$("budgetBtn").onclick=async()=>{ const p=proj(); if(!p) return; const usage=S.tasks.filter(x=>x.projectId===p.id).reduce((n,x)=>n+(x.tokens||0)+(x.planTokens||0)+(x.check?.tokens||0),0); const v=prompt(`Muse token budget for “${p.name}”.\nUsed so far: ${usage.toLocaleString()} tokens.\nEnter a maximum (0 = no limit). When it's reached, steps use the free local fallback and tell you.`, String(p.budget||0)); if(v===null) return; const n=Number(v); if(!Number.isFinite(n)||n<0){ toast("That wasn't a number — budget unchanged."); return; } await api(`/api/projects/${p.id}/budget`,"POST",{budget:n}); await load(); toast(n?`Budget set: ${n.toLocaleString()} tokens for this project.`:"Budget removed — no limit."); };
+function openProjectModal(){ $("projectOverlay").classList.add("open"); renderTemplates(); setTimeout(()=>$("npName").focus(),60); }
+$("obCreate").onclick=openProjectModal;
+document.querySelectorAll("[data-idea]").forEach(b=>b.onclick=()=>{ const ideas={bakery:{type:"website",name:"Crumb & Craft — Bakery",desc:"Fresh bread, daily."},habits:{type:"app",name:"Daily — Habit App",desc:"Small steps, daily."},festival:{type:"poster",name:"Night Fest — Poster",desc:"MUSIC IN THE DARK."}}; const idea=ideas[b.dataset.idea]; if(!idea) return; $("npName").value=idea.name; $("npDesc").value=idea.desc; $("npType").value=idea.type; selectedTemplate="blank"; openProjectModal(); });
+$("npImportBtn").onclick=async()=>{ const pathv=$("npImportPath").value.trim(); const msg=$("npImportMsg"); if(!pathv){ msg.textContent="Paste the full folder path first (e.g. /Users/you/my-site)."; return; } const btn=$("npImportBtn"); btn.disabled=true; btn.textContent="Importing…"; msg.textContent=""; try{ const r=await api("/api/projects/import","POST",{path:pathv}); curProject=r.project.id; selectedId=null; viewingHash=null; $("projectOverlay").classList.remove("open"); await load(); toast(`Imported “${r.project.name}” — it's in the middle. Add a request to improve it.`); }catch(e){ msg.textContent=e.message; msg.style.color="#B3261E"; } btn.disabled=false; btn.textContent="Import folder"; };
+document.addEventListener("keydown",e=>{ if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k"){ e.preventDefault(); if(S?.projects.length) openReq(); } if(e.key==="Escape") document.querySelectorAll(".overlay.open").forEach(o=>o.classList.remove("open")); });
 
 /* run whole queue in superagent order */
 $("runNextBtn").onclick=async()=>{
