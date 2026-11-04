@@ -5,12 +5,7 @@
 </div>
 
 <p align="center">
-    <b>See what your agents built — don't read about it.</b>
-</p>
-
-<p align="center">
-    A visual, layman-friendly frontend for Muse.<br>
-    No walls of text. No red/green diffs. The actual rendered change, who made it, and your approval before anything ships.
+    A local frontend for Muse that shows agent changes as rendered output instead of text.
 </p>
 
 <hr>
@@ -18,67 +13,82 @@
 ## Overview
 
 <p align="center">
-  <img src="docs/screenshot.png" alt="Muse Maker — requests queue, live rendered project with Before/After compare, and the agent team" style="width: 92%;">
+  <img src="docs/screenshot.png" alt="Muse Maker interface: request queue, rendered project with Before/After comparison, agent team" style="width: 92%;">
 </p>
 
-Frontier coding agents are so productive that users eventually stop reviewing. They get flooded with text, shrug, and hit Accept — without actually knowing what changed. That's how bugs, ugly designs, and unwanted changes ship.
+Coding agents produce changes faster than most people can review them. The default review surface — a long transcript plus a diff — does not scale: readers skim, then accept changes they have not actually evaluated.
 
-**Muse Maker fixes the review problem by making everything visual.** Your project renders live in the center. A superagent orders your requests and assigns them to a team of Muse subagents. Every step shows up as a draggable Before/After of the *real rendered project*, in plain English, with a live progress view — and nothing is final until you approve it.
+Muse Maker takes a different approach. The project itself is rendered in the center of the window. Each agent step produces a new rendered state, shown next to the previous one, with a short description of what changed and why. The user approves, requests a change, or reverts. Nothing is presented as final before that decision.
+
+The system runs locally. Projects are ordinary files on disk, each with its own git repository. All planning and editing is done by Muse sessions; Muse Maker handles state, rendering, history, and review.
 
 <hr>
 
-## Features
+## How it works
 
-- **Visual, not textual**: Every change is a rendered Before/After you can drag, try live, and view full screen. Not a diff.
-- **Any project**: Websites, phone-style apps, posters, dashboards, slides, shops, and real Vite + React apps — rendered from the actual files on disk.
-- **Beyond the browser**: Python tools run and show their generated report live. Native Mac (SwiftUI) and Unity projects build for real on your Mac and show the latest build screen, build status, and logs.
-- **A team, not a black box**: Designer, Builder, Checker, and Tester agents (editable, addable, with Muse-style icons) are planned and assigned automatically by a superagent. A separate Checker reviews every change before you see it.
-- **Live progress you can actually spot**: Queue summary, per-step percentages and timers, per-teammate state pills, and brief one-line team messages in *Just now* — all updating live, no refresh needed.
-- **You stay the boss**: Nothing ships without your approval. Every step is a git commit; view any point in history, restore it safely on top, or undo — history is never rewritten.
-- **Muse only, cost-aware**: Every agent is a headless Muse session (`muse exec`, Meta provider). Spark-first configuration, per-project token budgets, and visible token costs keep charges in check.
-- **Local-first**: Real projects live in `projects/` on your machine, each with its own git history. Import an existing folder and keep working on it.
+1. Create a project, or import an existing folder. Project type can be selected manually or inferred from the name and description.
+2. Add requests in plain language. A planner session (the "superagent") sorts the queue and assigns each request to a subagent by role.
+3. The assigned subagent edits the real project files. Progress is reported as a sequence of phases — working, building, saving, checking — with elapsed time.
+4. A separate, read-only checker session reviews the resulting diff and records a pass or a flag. Flags are queued back to the original author as fix requests.
+5. The result appears as a Before/After rendering. Approve, request a tweak, or undo. Approval is the only path to "done".
 
-## How It Works
+Every completed step is a git commit. Any earlier step can be viewed rendered, read-only. Restoring a step checks it out and records it as a new commit; history is never rewritten.
 
-1. **Describe it** — start a project from scratch or import an existing folder. Muse Maker can even decide the project type for you.
-2. **Ask in plain English** — *"make it bright but light colors"* is a perfectly good request.
-3. **The superagent plans** — it orders the queue and assigns each step to the right teammate.
-4. **Agents build** — watch live phases, percentages, and timers while they edit the real files.
-5. **You look, then decide** — compare Before/After, try it live, read the one-line summary, then Approve, Tweak, or Undo.
+## Supported project types
 
-## Run It Locally
+| Type | Behavior |
+|---|---|
+| Website, mobile app, poster, dashboard, slides, shop | Rendered directly from project files; starter templates included |
+| React (Vite) | Dependencies installed and built by Muse Maker; build output snapshotted per step for Before/After |
+| Python tool | `main.py` is executed; the report it generates is rendered in place |
+| Mac app (SwiftUI) | Compiled with `swift build`; **Build + Run** packages a `.app` bundle and opens it |
+| Unity game | Built headlessly with the installed Unity editor; stage shows the latest build screen and log |
+
+Non-web projects cannot be rendered live in a browser frame, so the stage shows the latest build artifact — a `screenshot.png` from the project if present, otherwise a UI sketch generated from source — together with build status. This is labeled as such in the UI.
+
+## Running
 
 ```bash
 node server.mjs
-# open http://localhost:5174
+# http://localhost:5174
 ```
 
-No dependencies, no build step. Authentication is your Muse login on this machine (`muse login`) — Muse Maker stores no API keys and talks to no third-party AI. It never uses OpenAI.
+There are no dependencies and no build step. Requirements: Node.js, git, and the Muse CLI, signed in (`muse login`). No API keys are stored, and no third-party AI service is contacted.
 
-### Cost-saver mode
+Optional, for React and native builds: `npm`, the Swift toolchain, Unity Hub, and Chrome (used for per-step screenshots; if absent, screenshots are skipped and can be captured manually).
 
-The default `.env` runs `muse-spark-1.3` for planning *and* building, at low reasoning effort with lean step caps. Flip **Planner · Spark/Wonder** in the header when you want deeper planning. Every card shows which Muse ran and how many tokens it used — cost is never hidden.
+## Models and cost
+
+All agents are headless Muse sessions (`muse exec`, Meta provider). Configuration is in `.env`:
+
+- `MUSE_MODEL_PLANNER` / `MUSE_MODEL_WORKER` select the Muse models. The shipped defaults use `muse-spark-1.3` for both; the planner can be switched to `muse-wonder-1.0` from the header.
+- Reasoning effort and per-session step caps are set low by default, and workers run under a lean preset.
+- Each project has an optional token budget. When it is exhausted, planning falls back to rules and execution to a deterministic local editor; both are labeled in the UI, and token usage per step is always displayed.
+- `AUTO_CHECK=0` disables the checker session.
+
+If the Muse CLI is missing or signed out, the local fallback still produces real edits and commits. Those steps are marked as local in the UI, never attributed to a model.
+
+## Implementation notes
+
+- `server.mjs` is the entire backend: project scaffolding and import, git operations, preview serving, build orchestration, screenshots, and the Muse session runner.
+- State lives in `data/state.json`; projects live in `projects/<name>-<id>/`, each a separate git repository. Screenshots are stored per commit under `data/shots/`.
+- One step runs per project at a time, so history cannot be corrupted by concurrent edits. A step interrupted by a restart is marked as stopped rather than left in a running state; uncommitted work in the files is auto-saved before the next run.
+- The frontend is a single `index.html`. It polls state every five seconds and re-renders on change; the selected project and step persist across reloads.
+
+## Testing
 
 ```bash
-npm test   # regression-check the non-AI paths (spends no Muse tokens)
+npm test
 ```
 
-## Project Types
+This runs `tests/smoke.mjs` against the running server. It covers project creation, import, previews, history, budgets, agent editing, builds for Python/Mac/Unity scaffolds, and frontend regressions. It spends no Muse tokens; the Muse paths (planning, execution, checking) are exercised manually.
 
-| Type | What you get |
-|---|---|
-| Website / Mobile app / Poster / Dashboard / Slides / Shop | Browser-rendered from real files, with templates to start from |
-| React (Vite) | Real framework project: install, build, per-step build snapshots |
-| Python tool | Runs `main.py`; its generated report renders live and clickable |
-| Mac app (SwiftUI) | `swift build`, packaged and opened on your Mac with **Build + Run** |
-| Unity game | Headless Unity build; latest build screen, status, and logs |
+## Limitations
+
+- Local only. No accounts, sync, sharing, or multi-user collaboration.
+- Native apps are shown as build artifacts, not live-rendered, and clicks are not mirrored into them. Web projects are fully interactive in the preview.
+- Builds depend on toolchains installed on the machine. A missing or failing toolchain is reported in the build log rather than hidden.
 
 ## Contributing
 
-Contributions are welcome — bug fixes, features, and documentation alike. The bar is simple: if a non-technical user can't *see* what changed and confidently approve it, it's not done yet.
-
-## Addendum
-
-- Muse Maker is local-first by design: no cloud sync, no accounts, no collaboration yet. That's the honest next frontier.
-- Live click-mirroring into native Mac/Unity apps isn't there yet — native projects show their latest build screen instead. Web projects are fully clickable via **Try it live**.
-- If the Muse CLI is unavailable, a deterministic local fallback still makes real edits and commits — and the UI labels those steps as local, never as Muse work.
+Issues and pull requests are welcome. The acceptance criterion for UI changes: a non-technical user should be able to tell what changed, who changed it, and how to undo it, without reading a diff.
