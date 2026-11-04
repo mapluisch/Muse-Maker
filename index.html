@@ -37,6 +37,8 @@ header{position:sticky;top:0;z-index:60;background:var(--glass);backdrop-filter:
 .qnum{width:20px;height:20px;border-radius:50%;background:#E8E8ED;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;flex:none;margin-top:1px;text-align:center}.qnum.review{background:rgba(255,159,10,.25);color:#9A6700}.qnum.done{background:rgba(52,199,89,.2);color:#248A3D}
 .task b{font-size:13.5px;font-weight:600;line-height:1.35;display:block;letter-spacing:-.01em}.task span{font-size:12px;color:var(--sub);display:block;margin-top:2px;line-height:1.4}
 .task .mini{font-size:11px;color:var(--blue);background:none;border:0;padding:2px 4px;font-weight:700}
+.runpill{font-size:11.5px;font-weight:750;color:#fff;background:var(--blue);border-radius:999px;padding:5px 11px;white-space:nowrap;cursor:pointer}
+.runpill:hover{background:var(--blue-hover)}
 .bar{height:3px;background:rgba(120,120,128,.18);border-radius:99px;margin-top:7px;overflow:hidden}.bar i{display:block;height:100%;background:var(--blue);transition:width .5s}
 .empty{padding:20px 18px;font-size:13px;color:var(--sub);text-align:center;line-height:1.5}
 .canvas-card{overflow:hidden;border-radius:24px}
@@ -319,7 +321,8 @@ function renderQueueSummary(){
   else if (review) { big = `${review} step${review > 1 ? "s" : ""} waiting for your eyes`; now = "Nothing ships until you approve it — check the picture in the middle."; barPct = pctDone; }
   else if (total && done === total) { big = "All steps approved"; now = "Your team is idle. Add a request whenever you're ready."; barPct = 100; }
   else { const next = queue().find(t=>t.status==="todo"); big = total ? `${done} of ${total} steps approved` : "No requests yet"; now = next ? `Next up: “${next.title}” (${(S.agents[next.agent] || FALLBACK_A).name})` : "Add a request and your superagent will order it."; barPct = pctDone; }
-  el.innerHTML = `<div class="big">${big}</div><div class="now">${now}</div><span class="bar"><i data-progbase="${doing ? (doing.progress || 10) : barPct}" data-phaseat="${doing ? (doing.phaseAt || doing.startedAt || Date.now()) : ""}" style="width:${barPct}%"></i></span><div class="counts"><span>✓ ${done} done</span><span>! ${review} for you</span><span>● ${doing ? 1 : 0} working</span><span>${queued} queued</span></div>`;
+  el.innerHTML = `<div class="big">${big}</div><div class="now">${now}</div><span class="bar"><i data-progbase="${doing ? (doing.progress || 10) : barPct}" data-phaseat="${doing ? (doing.phaseAt || doing.startedAt || Date.now()) : ""}" style="width:${barPct}%"></i></span><div class="counts"><span>✓ ${done} done</span><span>! ${review} for you</span><span>● ${doing ? 1 : 0} working</span><span>${queued} queued</span></div>${!doing && queue().find(t=>t.status==="todo") ? `<button class="btn btn-primary" id="runNextBtn2" type="button" style="margin-top:11px;width:100%;padding:10px 14px">▶ Run next step — ${(S.agents[queue().find(t=>t.status==="todo").agent] || FALLBACK_A).name}: “${queue().find(t=>t.status==="todo").title.slice(0, 44)}”</button>` : ""}`;
+  const rn = $("runNextBtn2"); if (rn) rn.onclick = () => { const nx = queue().find(t=>t.status==="todo"); if (nx) runTaskById(nx.id); };
 }
 function renderStatus(){
   const p = proj(), el = $("statusStrip"); if(!p || !el) return;
@@ -387,7 +390,7 @@ function taskRow(t, qn){
     <span class="qnum ${t.status==="review"?"review":t.status==="done"?"done":""}">${t.status==="done"?"✓":t.status==="review"?"!":qn}</span>
     <span style="flex:1;min-width:0"><b>${t.title}</b><span>${a.name} · ${a.role}${t.status==="doing"?` · ${t.phase || "working"} · <span class="js-elapsed" data-start="${t.startedAt || Date.now()}">${fmtDur(Date.now() - (t.startedAt || Date.now()))}</span>`:""}${t.status==="todo"&&t.error?" · stopped — run again":""}${t.executorNote?" · local edit":""}</span>${t.executor?`<span>${t.executor.replace("muse:","Muse ")}${t.tokens?` · ${(t.tokens/1000).toFixed(1)}k tokens`:""}${t.diff?` · +${t.diff.add} −${t.diff.del} lines`:""}</span>`:""}
     ${t.status==="doing"?`<span style="display:flex;align-items:center;gap:8px;margin-top:6px"><span class="bar" style="flex:1;margin-top:0"><i data-progbase="${t.progress || 10}" data-phaseat="${t.phaseAt || t.startedAt || Date.now()}" style="width:${dispProg(t)}%"></i></span><span class="pct" data-progtext data-progbase="${t.progress || 10}" data-phaseat="${t.phaseAt || t.startedAt || Date.now()}">${dispProg(t)}%</span></span>`:""}</span>
-    ${t.status==="todo"?`<span><span class="mini" data-up="${t.id}" title="Move up">↑</span><span class="mini" data-down="${t.id}" title="Move down">↓</span></span>`:""}
+    ${t.status==="todo"?`<span style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><span class="runpill" data-run="${t.id}" title="Run this step now">▶ Run</span><span><span class="mini" data-up="${t.id}" title="Move up">↑</span><span class="mini" data-down="${t.id}" title="Move down">↓</span></span></span>`:""}
   </button>`;
 }
 function renderTasks(){
@@ -404,6 +407,7 @@ function renderTasks(){
   $("taskCount").textContent = all.length+" total";
   $("taskGroups").querySelectorAll("[data-t]").forEach(b=>b.onclick=e=>{ if(e.target.dataset.up||e.target.dataset.down) return; selectedId=b.dataset.t; viewingHash=null; renderAll(); });
   $("taskGroups").querySelectorAll("[data-up],[data-down]").forEach(b=>b.onclick=async e=>{ e.stopPropagation(); await moveTask(b.dataset.up||b.dataset.down, b.dataset.up?-1:1); });
+  $("taskGroups").querySelectorAll("[data-run]").forEach(b=>b.onclick=e=>{ e.stopPropagation(); runTaskById(b.dataset.run); });
 }
 async function moveTask(id, dir){
   const q=queue().filter(t=>t.status==="todo"); const i=q.findIndex(t=>t.id===id); const j=i+dir;
@@ -602,7 +606,7 @@ $("runNextBtn").onclick=async()=>{
 };
 
 /* modals */
-function openReq(){ $("requestOverlay").classList.add("open"); $("planNote").textContent=""; setTimeout(()=>$("reqText").focus(),60); }
+function openReq(){ $("requestOverlay").classList.add("open"); $("planNote").textContent=""; try{ $("reqAutoRun").checked = localStorage.getItem("mm-autorun") !== "0"; }catch(e){} setTimeout(()=>$("reqText").focus(),60); }
 $("openRequest").onclick=openReq; $("addQuick").onclick=openReq;
 document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>b.closest(".overlay").classList.remove("open"));
 document.querySelectorAll(".overlay").forEach(o=>o.addEventListener("click",e=>{if(e.target===o)o.classList.remove("open");}));

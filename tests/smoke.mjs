@@ -129,6 +129,7 @@ if (process.env.SMOKE_REACT === "1") {
   check("build+run wired", html.includes('id="runAppBtn"') && srv.includes('parts[3] === "run"') && srv.includes("launchDetached"));
   check("side sheets, no full-screen blur modal", html.includes("translateX(105%)") && html.includes(".overlay{position:fixed;top:0;right:0") && !html.includes("inset:0;background:rgba(245,245,247") && !html.includes('aria-modal="true"'));
   check("request sheet slides from the left, progress summary wired", html.includes('class="overlay from-left" id="requestOverlay"') && html.includes('id="queueSummary"') && html.includes("renderQueueSummary") && html.includes("dispProg"));
+  check("run is prominent + auto-run after planning", html.includes('id="runNextBtn2"') && html.includes("data-run=") && html.includes('id="reqAutoRun"') && html.includes("runTaskById"));
   check("server tracks phases and reconciles orphans", srv.includes("setPhase") && srv.includes("Stopped before it finished") && srv.includes("Auto-saved work already in the files"));
 }
 
