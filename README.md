@@ -21,26 +21,32 @@ Frontier agents are so productive that users stop reviewing. They get a wall of 
 ## Run it locally
 
 ```bash
-python3 -m http.server 5173
-# open http://localhost:5173
+node server.mjs
+# open http://localhost:5174
 ```
 
-No build step. Single file: `index.html`.
+No dependencies, no build step. The server is the product: it creates real projects in `projects/` (each its own git repo), plans, executes, renders, and keeps history.
+
+### The brain
+
+Muse only — no third-party APIs, no keys stored. Every agent is a headless Muse session (`muse exec`, Meta provider). Auth is your Muse login on this machine (`muse login`); Muse Maker never sees a key. Current `.env` runs **cost-saver mode**: `muse-spark-1.3` plans *and* builds, at low reasoning effort, with the lean `miniswe` worker preset and step caps (planner ≤3 steps, worker ≤14) — a verified design step used ~54k tokens vs ~144k uncapped. Flip **Planner · Spark/Wonder** in the header when you want deeper planning (workers always stay Spark unless you change `.env`); the badge always shows what's actually running. Projects are multi-file now: workers may add linked `styles.css`/`app.js` etc., the preview serves them, git history/restore/undo cover all files, and **Download** exports `.html` for single-file projects or `.tar.gz` when a project has grown files. Every card shows which Muse ran, how many tokens it used, and the line diff — cost is never hidden. If the Muse CLI is missing or logged out, a deterministic local fallback still makes real edits/commits and the header badge + task card say so honestly.
+
+### How a step flows
+
+`New request → superagent orders + assigns (Mira/Kai/Noor/Leo) → Run this step (or Run queue in order) → subagent edits projects/<name>/index.html → git commit → Noor (a separate read-only Muse session) reviews the actual diff and posts a pass/flag note → you compare Before/After → Approve / Tweak / Undo`. The UI only says "checked by Noor" when that check really ran; older steps get an **Ask Noor to check** button. Set `AUTO_CHECK=0` in `.env` to skip auto-checks and save tokens. History is a timeline of commits: tap any step to view it rendered (read-only); **Restore** saves that version as a new commit on top — history is never rewritten.
 
 ## Any visual project — not one hardcoded app
 
-The center canvas is a *renderer slot*. A project brings its own visual (website, mobile app, poster, dashboard, slides…); Muse Maker renders Before / After of the real thing and diffs it visually. The demo ships four: **Aurora** (website), **Pulse** (phone app), **Nord Fest** (poster), **Clarity** (dashboard). Use **+ New** to create your own — name, type, colour mood — and the team starts on a blank canvas of that type.
-
-This is deliberately built to become a real project maker: swap a demo renderer for a real one (live DOM / screenshot of your actual project) and the tasks, team, compare, and approval flow stay identical.
+The center canvas renders the *real project files* — anything browser-renderable belongs there. Create from scratch in six flavours: **Website, Mobile app, Poster, Dashboard, Slides, Shop** (`+ New project`: name, type, template, colour mood, one-line description). Each type ships starting templates (Coffee shop, Portfolio, Festival, Pitch…) so a new project already looks like something; Blank canvas is always there. Regression-check the non-AI paths any time with `npm test` (server must be running; spends no Muse tokens). One real project (**Aurora**, a coffee brand site) is seeded so the first open already has history; everything else you create yourself. **Try it live** makes the preview clickable so you can use the project, not just look at it; **Download** exports the single-file HTML.
 
 ## Try this flow (60 seconds)
 
-1. Top: switch projects — **Aurora / Pulse / Nord Fest / Clarity / + New**. Notice the canvas changes shape: browser, phone, poster.
-2. Left: click a request marked **For you**. Middle: drag to compare Before / After. Tap pin **1**.
-3. Below the canvas: one line of *what changed* and *why* → **Approve**. Or **Ask for a tweak**.
-4. Header: **Watch them work** — a Doing request finishes and becomes For you.
-5. **+ New request** — plain English, auto-assigned to the right person.
+1. **Aurora** is open. Left, under **For you**, pick a finished step.
+2. Drag **Compare** — left is before that step, right is after. Real rendered files, not screenshots of a mock.
+3. Read the one-line *what changed*, the token cost, and the line diff → **Approve**, **Ask for a tweak**, or **Undo step**.
+4. Scrub **History** below the canvas to look back; **Restore** re-saves any step on top.
+5. **+ New request** in plain English → the Spark superagent assigns it and queues it → **Run queue in order**.
 
-## What's simulated vs real
+## What's real
 
-This hackathon MVP simulates agent work with realistic demo data so anyone can judge the experience in a minute. The natural next step is wiring the same UI to real Muse sessions, git worktrees per agent, and headless screenshot capture for true Before/After renders.
+Everything user-facing is real: project files, git commits/history/restore, Muse planning and editing, rendering, token accounting. The only fallback is a deterministic local editor used solely when the Muse CLI is unavailable — and the UI labels those steps as local, never as Muse work.
