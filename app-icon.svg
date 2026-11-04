@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Muse Maker app icon">
+  <title>Muse Maker</title>
+  <defs>
+    <linearGradient id="muse-g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00A2FF"/>
+      <stop offset="38%" stop-color="#5B6CFF"/>
+      <stop offset="68%" stop-color="#C44CE0"/>
+      <stop offset="88%" stop-color="#FF5E7A"/>
+      <stop offset="100%" stop-color="#FFB25E"/>
+    </linearGradient>
+    <path id="petal" d="M50 50 C42.5 40.5, 43.5 19, 52.5 6.5 C55 21, 57.5 38, 50 50 Z"/>
+  </defs>
+  <rect width="100" height="100" rx="23" fill="#101014"/>
+  <g fill="url(#muse-g)" transform="translate(14 14) scale(0.72)">
+    <use href="#petal"/>
+    <use href="#petal" transform="rotate(45 50 50)"/>
+    <use href="#petal" transform="rotate(90 50 50)"/>
+    <use href="#petal" transform="rotate(135 50 50)"/>
+    <use href="#petal" transform="rotate(180 50 50)"/>
+    <use href="#petal" transform="rotate(225 50 50)"/>
+    <use href="#petal" transform="rotate(270 50 50)"/>
+    <use href="#petal" transform="rotate(315 50 50)"/>
+  </g>
+  <circle cx="50" cy="50" r="4.4" fill="#101014"/>
+</svg>

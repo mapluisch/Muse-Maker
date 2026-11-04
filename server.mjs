@@ -7,7 +7,7 @@
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
-import { execFile } from "node:child_process";
+import { execFile, spawn } from "node:child_process";
 import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 
@@ -51,6 +51,17 @@ let state = { projects: [], tasks: [], feed: [] };
 try { state = JSON.parse(fs.readFileSync(STATE_FILE, "utf8")); } catch { /* first run */ }
 if (!state.agents) state.agents = JSON.parse(JSON.stringify(AGENTS));
 function save() { fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2)); }
+/* A step marked "doing" when the server starts was orphaned by a restart/stop:
+   never leave the user staring at a spinner that will never finish. */
+{
+  let touched = false;
+  for (const t of state.tasks || []) if (t.status === "doing") {
+    t.status = "todo"; t.progress = 0; t.phase = "Stopped before it finished";
+    t.error = "This step stopped before it finished — it was not saved as a completed step. Press “Run this step” to continue; work already in the files is auto-saved first.";
+    t.interruptedAt = Date.now(); touched = true;
+  }
+  if (touched) save();
+}
 const uid = (p) => p + Date.now().toString(36) + Math.floor(Math.random() * 999).toString(36);
 const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 32) || "project";
 function feed(agent, text) { state.feed.unshift({ id: uid("f"), agent, text, at: Date.now() }); state.feed = state.feed.slice(0, 30); }
@@ -60,6 +71,7 @@ function say(agentId, text) {
   feed(agentId, clean.length > 110 ? clean.slice(0, 107) + "…" : clean);
 }
 const shortTitle = (t, n = 42) => (t.length > n ? t.slice(0, n - 1) + "…" : t);
+function setPhase(t, phase, progress) { if (phase) t.phase = phase; if (typeof progress === "number") t.progress = progress; t.phaseAt = Date.now(); save(); }
 const projById = (id) => state.projects.find((p) => p.id === id);
 const projDir = (p) => path.join(PROJECTS_DIR, p.dir);
 function publicTask(t) { return t; }
@@ -128,6 +140,35 @@ async function runBuild(p) {
     return "Unity build finished: Build/Game.app";
   }
   throw new Error("This project doesn't have a build.");
+}
+function launchDetached(cmd, args) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(cmd, args, { detached: true, stdio: "ignore" });
+    child.once("error", reject);
+    child.once("spawn", () => { child.unref(); resolve(); });
+  });
+}
+async function runApp(p) {
+  const dir = projDir(p);
+  const log = await runBuild(p);
+  p.build = { ok: true, at: Date.now(), log };
+  if (p.kind === "python") { p.run = { ok: true, at: Date.now(), log: "Ran main.py — the report above is fresh." }; save(); return p.run; }
+  if (p.kind === "mac") {
+    const { stdout } = await run("swift", ["build", "--show-bin-path"], { cwd: dir, timeout: 60000 });
+    const binDir = stdout.trim().split("\n").pop();
+    const bins = fs.readdirSync(binDir).filter((f) => { try { const st = fs.statSync(path.join(binDir, f)); return st.isFile() && (st.mode & 0o111) && !f.endsWith(".dSYM"); } catch { return false; } }).sort((a, b) => a.length - b.length);
+    if (!bins.length) throw new Error("Build finished but no runnable app was found in " + binDir);
+    await launchDetached(path.join(binDir, bins[0]), []);
+    p.run = { ok: true, at: Date.now(), log: `Opened ${bins[0]} on this Mac` };
+    save(); return p.run;
+  }
+  if (p.kind === "unity") {
+    const app = path.join(dir, "Build", "Game.app");
+    await launchDetached("open", [app]);
+    p.run = { ok: true, at: Date.now(), log: "Opened Build/Game.app on this Mac" };
+    save(); return p.run;
+  }
+  throw new Error("This project runs in the preview above.");
 }
 function buildViewHtml(p) {
   const dir = projDir(p);
@@ -713,15 +754,19 @@ async function runTask(t) {
   running.add(t.id); runningProjects.add(t.projectId);
   const dir = projDir(p); const file = path.join(dir, "index.html");
   try {
-    t.status = "doing"; t.progress = 40; save();
+    t.status = "doing"; t.startedAt = Date.now(); delete t.error; delete t.interruptedAt;
+    setPhase(t, `${agentOf(t.agent).name} is starting`, 10);
     say(t.agent, `Starting: “${shortTitle(t.title)}”`);
     const isWeb = !p.kind || p.kind === "web";
     const before = isWeb ? fs.readFileSync(file, "utf8") : null;
+    try { if ((await git(dir, ["status", "--porcelain"])).trim()) { await commitAll(dir, "Auto-saved work already in the files"); say(t.agent, "Auto-saved the work already in the files."); } } catch { /* clean or first run */ }
     const overBudget = p.budget > 0 && usageOf(p.id) >= p.budget;
+    setPhase(t, p.kind === "mac" ? `${agentOf(t.agent).name} is designing the app window` : p.kind === "unity" ? `${agentOf(t.agent).name} is building the game step` : `${agentOf(t.agent).name} is working on the files`, 25);
     const result = overBudget ? null : await runMuseWorker(t, p, dir);
     let changed = false;
     try { changed = (await git(dir, ["status", "--porcelain"])).trim().length > 0; } catch { changed = false; }
     let valid = false; let buildError = "";
+    if (changed && (p.framework || p.kind === "python" || p.kind === "mac")) setPhase(t, p.kind === "mac" ? "Building the Mac app with Swift" : p.kind === "python" ? "Running the Python tool" : "Building the app", 70);
     if (changed && p.framework) {
       try { await buildProject(p); valid = fs.existsSync(path.join(dir, "dist", "index.html")); } catch (e) { buildError = String(e.stderr || e.stdout || e.message || e).slice(-400); valid = false; }
     } else if (changed && p.kind === "python") {
@@ -742,7 +787,7 @@ async function runTask(t) {
     } else {
       if (changed) { try { await git(dir, ["checkout", "--", "."]); await git(dir, ["clean", "-fd"]); } catch { if (isWeb && before) fs.writeFileSync(file, before); } }
       if (p.framework || !isWeb) {
-        t.status = "todo"; t.progress = 0;
+        t.status = "todo"; t.progress = 0; t.phase = buildError ? "Build didn't pass — nothing saved" : "Stopped — nothing saved"; t.phaseAt = Date.now();
         if (buildError) say(t.agent, "Build broke — rolled back, nothing kept.");
         t.error = overBudget ? `This project's Muse budget (${p.budget.toLocaleString()} tokens) is used up. Raise the budget on the project header, then run again.` : buildError ? (p.framework ? "That change broke the React build, so nothing was kept. Try rephrasing the request." : "That change broke the build, so nothing was kept. Try rephrasing the request.") : "The Muse step didn't produce a working change, so nothing was kept.";
         return t;
@@ -751,6 +796,7 @@ async function runTask(t) {
       fs.writeFileSync(file, r.html); executor = "local-fallback"; if (r.note) t.what = r.note;
       t.executorNote = overBudget ? `This project's Muse budget (${p.budget.toLocaleString()} tokens) is used up — local fallback made this edit. Raise the budget on the project header to use Muse again.` : MUSE_OK === false ? "Muse CLI not found on the server — local fallback made this edit. Install Muse and `muse login`, then restart." : "The Muse step didn't produce a valid change — local fallback made this edit instead.";
     }
+    setPhase(t, "Saving this step", 90);
     t.commit = await commitAll(dir, `${agentOf(t.agent).name} (${agentOf(t.agent).role}): ${t.title}`);
     try { const ns = (await git(dir, ["diff", "HEAD~1", "HEAD", "--numstat"])).trim().split("\t"); t.diff = { add: Number(ns[0]) || 0, del: Number(ns[1]) || 0 }; } catch { /* first commit */ }
     t.status = "review"; t.progress = 100; t.executor = executor;
@@ -759,9 +805,11 @@ async function runTask(t) {
     else say(t.agent, `Done — ready for your eyes: “${shortTitle(t.title)}”`);
     if (t.teamNote) say(t.agent, t.teamNote);
     if (p.framework) await snapshotBuild(p, t.commit);
+    setPhase(t, "Taking the picture of this step", 95);
     await captureShot(p, t.commit);
-    if (executor.startsWith("muse:") && process.env.AUTO_CHECK !== "0") { say(t.agent, `→ ${checkerOf().name}: over to you for a check`); t.progress = 100; save(); await runChecker(t, p); }
-  } catch (e) { t.status = "todo"; t.progress = 0; t.error = String(e.message || e); }
+    if (executor.startsWith("muse:") && process.env.AUTO_CHECK !== "0") { say(t.agent, `→ ${checkerOf().name}: over to you for a check`); setPhase(t, `${checkerOf().name} is checking it`, 97); await runChecker(t, p); }
+    t.phase = "Ready for your eyes"; t.phaseAt = Date.now(); t.endedAt = Date.now();
+  } catch (e) { t.status = "todo"; t.progress = 0; t.phase = "Stopped — nothing saved"; t.phaseAt = Date.now(); t.error = String(e.message || e); }
   finally { running.delete(t.id); runningProjects.delete(t.projectId); save(); }
   return t;
 }
@@ -781,6 +829,8 @@ const server = http.createServer(async (req, res) => {
   const parts = url.pathname.split("/").filter(Boolean);
   try {
     if (url.pathname === "/" || url.pathname === "/index.html") return send(res, 200, fs.readFileSync(path.join(ROOT, "index.html"), "utf8"), "text/html");
+    if (url.pathname === "/logo.svg" || url.pathname === "/app-icon.svg") return send(res, 200, fs.readFileSync(path.join(ROOT, url.pathname.slice(1)), "utf8"), "image/svg+xml");
+    if (url.pathname === "/favicon-64.png" || url.pathname === "/apple-touch-icon.png" || url.pathname === "/favicon.ico") { const fp = path.join(ROOT, url.pathname.slice(1)); res.writeHead(200, { "Content-Type": url.pathname.endsWith(".ico") ? "image/x-icon" : "image/png", "Cache-Control": "no-store" }); return res.end(fs.readFileSync(fp)); }
     if (parts[0] === "preview" && parts[1]) {
       const p = projById(parts[1]); if (!p) return send(res, 404, "Project not found", "text/plain");
       const dir0 = projDir(p);
@@ -830,7 +880,7 @@ const server = http.createServer(async (req, res) => {
     }
     if (parts[0] !== "api") return send(res, 404, "Not found", "text/plain");
     if (parts[1] === "state" && req.method === "GET") {
-      const withHist = await Promise.all(state.projects.map(async (p) => ({ ...p, history: await history(p) })));
+      const withHist = await Promise.all(state.projects.map(async (p) => { const dir = projDir(p); const screen = ["screenshot.png", "screenshot.jpg", "ui.png"].some((f) => fs.existsSync(path.join(dir, f))) ? "screenshot" : fs.existsSync(path.join(dir, "ui.svg")) ? "sketch" : p.kind === "python" ? "report" : "page"; let dirty = false; try { dirty = (await git(dir, ["status", "--porcelain"])).trim().length > 0; } catch { /* no repo yet */ } return { ...p, history: await history(p), screen, dirty }; }));
       return send(res, 200, { projects: withHist, tasks: state.tasks, feed: state.feed, agents: state.agents, brain: { provider: "Muse", cli: MUSE_OK, plannerModel: PLANNER_MODEL, workerModel: WORKER_MODEL, label: `Muse · ${PLANNER_MODEL} plans · ${WORKER_MODEL} builds` }, templates: TEMPLATES });
     }
     if (parts[1] === "settings" && req.method === "POST") { const b = await readBody(req); if (["muse-spark-1.3", "muse-wonder-1.0"].includes(b.plannerModel)) { PLANNER_MODEL = b.plannerModel; return send(res, 200, { ok: true, plannerModel: PLANNER_MODEL }); } return send(res, 400, { error: "Unknown planner model" }); }
@@ -839,7 +889,8 @@ const server = http.createServer(async (req, res) => {
     if (parts[1] === "projects" && parts[2] === "import" && req.method === "POST") { const b = await readBody(req); try { return send(res, 201, await importProject({ sourcePath: b.path, name: b.name })); } catch (e) { return send(res, 400, { error: String(e.message || e) }); } }
     if (parts[1] === "projects" && parts[3] === "steps" && parts[5] === "screenshot" && req.method === "GET") { const p = projById(parts[2]); if (!p) return send(res, 404, { error: "No project" }); const fp = shotPath(p, parts[4]); if (!fs.existsSync(fp)) return send(res, 404, { error: "No screenshot for this step yet" }); res.writeHead(200, { "Content-Type": "image/png", "Cache-Control": "no-store" }); return res.end(fs.readFileSync(fp)); }
     if (parts[1] === "projects" && parts[3] === "screenshot" && req.method === "POST") { const p = projById(parts[2]); if (!p) return send(res, 404, { error: "No project" }); const b = await readBody(req); const ok = await captureShot(p, b.hash); return send(res, ok ? 200 : 500, { ok }); }
-    if (parts[1] === "projects" && parts[3] === "build" && req.method === "POST") { const p = projById(parts[2]); if (!p) return send(res, 404, { error: "No project" }); if (p.framework) { try { if (!fs.existsSync(path.join(projDir(p), "node_modules"))) { p.setup = "installing"; save(); void setupFramework(p); return send(res, 202, { ok: true, setup: "installing" }); } await buildProject(p); const head = (await git(projDir(p), ["rev-parse", "HEAD"])).trim(); await snapshotBuild(p, head); p.setup = "ready"; delete p.setupError; save(); void captureShot(p, head); return send(res, 200, { ok: true, setup: "ready" }); } catch (e) { p.setup = "failed"; p.setupError = String(e.stderr || e.message || e).slice(-600); save(); return send(res, 500, { error: "Build failed", detail: p.setupError }); } } if (p.kind === "python" || p.kind === "mac" || p.kind === "unity") { const dir = projDir(p); try { const log = await runBuild(p); p.build = { ok: true, at: Date.now(), log }; let head = (await git(dir, ["rev-parse", "HEAD"])).trim(); try { if ((await git(dir, ["status", "--porcelain"])).trim()) head = await commitAll(dir, `Build: ${p.kind} project`); } catch { /* commit best-effort */ } save(); void captureShot(p, head); return send(res, 200, { ok: true, build: p.build }); } catch (e) { p.build = { ok: false, at: Date.now(), log: String(e.stderr || e.stdout || e.message || e).slice(-600) }; save(); return send(res, 500, { error: "Build failed", detail: p.build.log }); } } return send(res, 400, { error: "This project doesn't have a build." }); }
+    if (parts[1] === "projects" && parts[3] === "build" && req.method === "POST") { const p = projById(parts[2]); if (!p) return send(res, 404, { error: "No project" }); if (p.framework) { try { if (!fs.existsSync(path.join(projDir(p), "node_modules"))) { p.setup = "installing"; save(); void setupFramework(p); return send(res, 202, { ok: true, setup: "installing" }); } await buildProject(p); const head = (await git(projDir(p), ["rev-parse", "HEAD"])).trim(); await snapshotBuild(p, head); p.setup = "ready"; delete p.setupError; save(); void captureShot(p, head); return send(res, 200, { ok: true, setup: "ready" }); } catch (e) { p.setup = "failed"; p.setupError = String(e.stderr || e.message || e).slice(-600); save(); return send(res, 500, { error: "Build failed", detail: p.setupError }); } } if (p.kind === "python" || p.kind === "mac" || p.kind === "unity") { const dir = projDir(p); p.build = { running: true, ok: null, at: Date.now(), log: "Building now…" }; save(); try { const log = await runBuild(p); p.build = { ok: true, at: Date.now(), log }; let head = (await git(dir, ["rev-parse", "HEAD"])).trim(); try { if ((await git(dir, ["status", "--porcelain"])).trim()) head = await commitAll(dir, `Build: ${p.kind} project`); } catch { /* commit best-effort */ } save(); void captureShot(p, head); return send(res, 200, { ok: true, build: p.build }); } catch (e) { p.build = { ok: false, at: Date.now(), log: String(e.stderr || e.stdout || e.message || e).slice(-600) }; save(); return send(res, 500, { error: "Build failed", detail: p.build.log }); } } return send(res, 400, { error: "This project doesn't have a build." }); }
+    if (parts[1] === "projects" && parts[3] === "run" && req.method === "POST") { const p = projById(parts[2]); if (!p) return send(res, 404, { error: "No project" }); if (!(p.kind === "python" || p.kind === "mac" || p.kind === "unity")) return send(res, 400, { error: "Build + Run is for Mac, Unity and Python projects — web projects already run in the preview." }); p.build = { running: true, ok: null, at: Date.now(), log: "Building now…" }; save(); try { const run = await runApp(p); let head = (await git(projDir(p), ["rev-parse", "HEAD"])).trim(); try { if ((await git(projDir(p), ["status", "--porcelain"])).trim()) head = await commitAll(projDir(p), `Build + Run: ${p.kind} project`); } catch { /* commit best-effort */ } save(); void captureShot(p, head); return send(res, 200, { ok: true, build: p.build, run }); } catch (e) { p.build = { ok: false, at: Date.now(), log: String(e.stderr || e.stdout || e.message || e).slice(-600) }; p.run = { ok: false, at: Date.now(), log: p.build.log }; save(); return send(res, 500, { error: "Build + Run didn't finish", detail: p.build.log }); } }
     if (parts[1] === "projects" && parts[3] === "budget" && req.method === "POST") { const p = projById(parts[2]); if (!p) return send(res, 404, { error: "No project" }); const b = await readBody(req); const n = Number(b.budget); if (!Number.isFinite(n) || n < 0) return send(res, 400, { error: "Budget must be 0 (no limit) or a positive token count." }); p.budget = Math.floor(n); save(); return send(res, 200, { ok: true, budget: p.budget, usage: usageOf(p.id) }); }
     if (parts[1] === "projects" && parts.length === 2 && req.method === "POST") { const b = await readBody(req); if (!b.name?.trim()) return send(res, 400, { error: "Name required" }); return send(res, 201, await createProject({ name: b.name.trim(), type: b.type, color: b.color, desc: b.desc, template: b.template })); }
     if (parts[1] === "projects" && parts[3] === "tasks" && req.method === "POST") { const p = projById(parts[2]); if (!p) return send(res, 404, { error: "No project" }); const b = await readBody(req); if (!b.text?.trim()) return send(res, 400, { error: "Write a request first" }); return send(res, 201, await addTask(p, b.text.trim(), b.agent)); }

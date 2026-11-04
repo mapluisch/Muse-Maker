@@ -123,6 +123,11 @@ if (process.env.SMOKE_REACT === "1") {
   check("after mode fully reveals the after-frame (try-it-live clickable)", html.includes('mode==="before"?100:mode==="after"?0:compare'));
   check("fullscreen toggle wired", html.includes('id="fsBtn"') && html.includes("#frame:fullscreen") && html.includes("requestFullscreen"));
   check("non-web build view in stage", html.includes("buildview") && html.includes('p.kind==="mac"'));
+  check("status strip + live elapsed wired", html.includes('id="statusStrip"') && html.includes("renderStatus") && html.includes("js-elapsed"));
+  check("live polling sees phases/builds + selection survives refresh", html.includes("setInterval(pollState, 5000)") && html.includes('getItem("mm-project")') && html.includes('setItem("mm-project"'));
+  const srv = fs.readFileSync(new URL("../server.mjs", import.meta.url), "utf8");
+  check("build+run wired", html.includes('id="runAppBtn"') && srv.includes('parts[3] === "run"') && srv.includes("launchDetached"));
+  check("server tracks phases and reconciles orphans", srv.includes("setPhase") && srv.includes("Stopped before it finished") && srv.includes("Auto-saved work already in the files"));
 }
 
 /* Python tool projects: create -> report generated -> build reruns (zero Muse tokens) */
@@ -135,6 +140,8 @@ if (process.env.SMOKE_REACT === "1") {
     check("python report renders in the middle", pv.status === 200 && pv.text.includes("PYTHON REPORT"));
     const pb = await req("POST", `/api/projects/${ppid}/build`, {});
     check("python build runs main.py", pb.status === 200 && pb.json.build?.ok === true, pb.json.build?.log || pb.json?.error || "");
+    const pr = await req("POST", `/api/projects/${ppid}/run`, {});
+    check("python build+run executes", pr.status === 200 && pr.json.run?.ok === true, pr.json.run?.log || pr.json?.error || "");
     await req("DELETE", `/api/projects/${ppid}`);
   }
 }
@@ -147,6 +154,9 @@ for (const [type, kind] of [["mac", "mac"], ["unity", "unity"]]) {
     const mpid = mc.json.project.id;
     const bv = await req("GET", `/preview/${mpid}/buildview`);
     check(kind + " build view shows screen + status", bv.status === 200 && bv.text.includes("ui.svg") && bv.text.includes("Not built yet"));
+    const st = await req("GET", "/api/state");
+    const mp = st.json.projects.find((p) => p.id === mpid);
+    check(kind + " state reports screen + clean files", mp?.screen === "sketch" && mp?.dirty === false, `${mp?.screen}/${mp?.dirty}`);
     await req("DELETE", `/api/projects/${mpid}`);
   }
 }

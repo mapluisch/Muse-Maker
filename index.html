@@ -4,13 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Muse Maker — See what your agents built</title>
+<link rel="icon" type="image/svg+xml" href="/logo.svg?v=2">
+<link rel="icon" type="image/png" sizes="64x64" href="/favicon-64.png?v=2">
+<link rel="icon" type="image/x-icon" href="/favicon.ico?v=2">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
 <script>try{const t=localStorage.getItem("mm-theme");if(t)document.documentElement.dataset.theme=t;}catch(e){}</script>
 <style>
 :root{--bg:#F5F5F7;--ink:#1D1D1F;--sub:#86868B;--faint:#AEAEB2;--blue:#0071E3;--blue-hover:#0077ED;--green:#34C759;--orange:#FF9F0A;--glass:rgba(255,255,255,.72);--glass-strong:rgba(255,255,255,.88);--hair:rgba(0,0,0,.07);--shadow:0 4px 24px rgba(0,0,0,.06),0 1px 3px rgba(0,0,0,.04);--shadow-lg:0 24px 64px rgba(0,0,0,.14)}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
 button{font:inherit;cursor:pointer;color:inherit}h1,h2,h3,p{margin:0}
 header{position:sticky;top:0;z-index:60;background:var(--glass);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid var(--hair)}
-.header-in{max-width:1440px;margin:0 auto;height:54px;padding:0 22px;display:flex;align-items:center;gap:14px}
+.header-in{max-width:1680px;margin:0 auto;height:54px;padding:0 20px;display:flex;align-items:center;gap:14px}
 .wordmark{font-size:15px;font-weight:700;letter-spacing:-.02em;display:flex;align-items:center;gap:8px;white-space:nowrap}.wordmark i{width:9px;height:9px;border-radius:3px;background:var(--ink);display:block}
 .brain{font-size:11.5px;font-weight:600;color:var(--sub);background:rgba(120,120,128,.12);padding:4px 10px;border-radius:999px;white-space:nowrap}.brain.ai{color:#0A6E2E;background:rgba(52,199,89,.16)}
 .live{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--sub);margin-left:auto;white-space:nowrap}.live i{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
@@ -18,12 +22,12 @@ header{position:sticky;top:0;z-index:60;background:var(--glass);backdrop-filter:
 .btn{border:0;border-radius:999px;padding:8px 16px;font-size:13.5px;font-weight:600;background:#E8E8ED;color:var(--ink);transition:background .15s,transform .1s}.btn:hover{background:#DEDEE3}.btn:active{transform:scale(.97)}.btn:disabled{opacity:.5;cursor:wait}
 .btn-primary{background:var(--blue);color:#fff}.btn-primary:hover{background:var(--blue-hover)}.btn-dark{background:var(--ink);color:#fff}.btn-dark:hover{background:#000}
 .btn-sm{padding:6px 12px;font-size:12.5px}.btn-ghost{background:transparent;color:var(--blue);padding:6px 8px}.btn-ghost:hover{background:transparent;text-decoration:underline}
-.projbar{max-width:1440px;margin:0 auto;padding:26px 22px 4px;display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.projbar{max-width:1680px;margin:0 auto;padding:20px 20px 2px;display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}
 .projbar h1{font-size:30px;font-weight:700;letter-spacing:-.03em;line-height:1.1}.projbar .type{font-size:14px;color:var(--sub);margin-top:5px}
 .seg{display:flex;background:rgba(120,120,128,.14);border-radius:999px;padding:2px;margin-left:auto;flex-wrap:wrap}
 .seg button{border:0;background:transparent;border-radius:999px;padding:6px 14px;font-size:13px;font-weight:600;color:#3A3A3C}.seg button.on{background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.14);color:var(--ink)}.seg button.new{color:var(--blue)}
-.layout{max-width:1440px;margin:0 auto;padding:18px 22px 36px;display:grid;grid-template-columns:272px minmax(0,1fr) 252px;gap:20px;align-items:start}
-@media(max-width:1120px){.layout{grid-template-columns:240px minmax(0,1fr)}.col-team{display:none}}
+.layout{max-width:1680px;margin:0 auto;padding:14px 20px 36px;display:grid;grid-template-columns:248px minmax(0,1fr) 232px;gap:16px;align-items:start}
+@media(max-width:1120px){.layout{grid-template-columns:220px minmax(0,1fr)}.col-team{display:none}}
 @media(max-width:760px){.layout{grid-template-columns:1fr}.col-team{display:block}.projbar h1{font-size:24px}}
 .card{background:var(--glass-strong);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border:1px solid var(--hair);border-radius:20px;box-shadow:var(--shadow)}
 .card-h{padding:16px 18px 6px;display:flex;align-items:baseline;gap:8px}.card-h h2{font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--sub)}.card-h .n{font-size:12.5px;color:var(--faint)}.card-h .link{margin-left:auto;font-size:12.5px;color:var(--blue);background:none;border:0;font-weight:600}
@@ -36,12 +40,22 @@ header{position:sticky;top:0;z-index:60;background:var(--glass);backdrop-filter:
 .bar{height:3px;background:rgba(120,120,128,.18);border-radius:99px;margin-top:7px;overflow:hidden}.bar i{display:block;height:100%;background:var(--blue);transition:width .5s}
 .empty{padding:20px 18px;font-size:13px;color:var(--sub);text-align:center;line-height:1.5}
 .canvas-card{overflow:hidden;border-radius:24px}
-.canvas-top{display:flex;align-items:center;gap:10px;padding:12px 16px;flex-wrap:wrap}.canvas-top .addr{font-size:12.5px;color:var(--sub);background:rgba(120,120,128,.1);border-radius:8px;padding:5px 12px}
-.stage{background:#FBFBFD;border-top:1px solid var(--hair);padding:22px;display:flex;flex-direction:column;align-items:center;gap:14px;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;touch-action:none}
+.canvas-top{display:flex;align-items:center;gap:8px;padding:10px 14px;flex-wrap:wrap}.canvas-top .addr{font-size:12.5px;color:var(--sub);background:rgba(120,120,128,.1);border-radius:8px;padding:5px 12px;max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.status-strip{display:flex;align-items:center;gap:10px;padding:11px 16px;border-top:1px solid var(--hair);background:rgba(255,255,255,.72);font-size:13px;min-height:44px}
+.status-strip .dot{width:9px;height:9px;border-radius:50%;background:#C7C7CC;flex:none}
+.status-strip.doing .dot{background:var(--blue);box-shadow:0 0 0 5px rgba(0,113,227,.14)}
+.status-strip.ok .dot{background:var(--green)}.status-strip.review .dot{background:var(--orange)}.status-strip.bad .dot{background:#FF3B30}
+.status-strip .main{min-width:0}.status-strip .title{font-weight:700;letter-spacing:-.01em;white-space:nowrap}
+.status-strip .sub{color:var(--sub);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:560px}
+.status-strip .checks{margin-left:auto;display:flex;gap:6px;flex:none;flex-wrap:wrap;justify-content:flex-end}
+.status-strip .check{font-size:11.5px;font-weight:650;color:#3A3A3C;background:rgba(120,120,128,.11);border-radius:999px;padding:4px 8px;white-space:nowrap}
+.status-strip .check.warn{color:#9A6700;background:rgba(255,159,10,.16)}
+[data-theme="dark"] .status-strip{background:rgba(28,28,30,.72)}.status-strip .check{color:var(--ink)}
+.stage{background:#FBFBFD;border-top:1px solid var(--hair);padding:14px;display:flex;flex-direction:column;align-items:center;gap:10px;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;touch-action:none}
 .stage ::selection{background:transparent}
 .handle,.knob,input.ba{-webkit-tap-highlight-color:transparent;touch-action:none;-webkit-user-select:none;user-select:none}
-.frame{background:#fff;border-radius:14px;box-shadow:var(--shadow-lg);overflow:hidden;position:relative;width:100%;max-width:700px;height:470px}
-.frame.phone{max-width:340px;height:560px;border-radius:30px}.frame.poster{max-width:400px;height:540px}
+.frame{background:#fff;border-radius:16px;box-shadow:var(--shadow-lg);overflow:hidden;position:relative;width:100%;max-width:1120px;height:clamp(520px,64vh,720px)}
+.frame.phone{max-width:360px;height:min(660px,74vh);border-radius:32px}.frame.poster{max-width:470px;height:min(640px,72vh)}
 .frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff;pointer-events:none}
 .fs-exit{position:absolute;top:10px;right:10px;z-index:9;display:none;background:rgba(29,29,31,.85);color:#fff;border:0;border-radius:999px;padding:8px 14px;font-size:12.5px;font-weight:700;cursor:pointer;backdrop-filter:blur(8px)}
 #frame:fullscreen{max-width:none;width:100%;height:100%;border-radius:0}
@@ -49,15 +63,15 @@ header{position:sticky;top:0;z-index:60;background:var(--glass);backdrop-filter:
 #frame:fullscreen iframe{background:#fff}
 .handle{position:absolute;top:0;bottom:0;width:1.5px;background:var(--blue);z-index:6;cursor:ew-resize}.knob{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:34px;height:34px;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.22);border:.5px solid var(--hair);user-select:none}
 input.ba{width:min(420px,80%);accent-color:var(--blue)}
-.stage-note{font-size:12.5px;color:var(--sub);text-align:center;max-width:540px;line-height:1.5}
-.timeline{width:100%;max-width:700px;background:#fff;border:1px solid var(--hair);border-radius:14px;padding:12px 14px}
+.stage-note{font-size:12.5px;color:var(--sub);text-align:center;max-width:760px;line-height:1.5}
+.timeline{width:100%;max-width:1120px;background:#fff;border:1px solid var(--hair);border-radius:14px;padding:12px 14px}
 .timeline h4{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);margin:0 0 10px}
 .steps{display:flex;gap:6px;align-items:flex-start;overflow-x:auto;padding-bottom:4px}
 .step{flex:none;width:118px;text-align:left;background:none;border:0;padding:0}
 .step i{width:22px;height:22px;border-radius:50%;background:#E8E8ED;font-style:normal;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;margin-bottom:5px;text-align:center}
 .step.on i{background:var(--ink);color:#fff}.step.view i{background:var(--blue);color:#fff}
 .step span{font-size:11px;color:var(--sub);line-height:1.3;display:block;height:28px;overflow:hidden}
-.histbar{display:none;width:100%;max-width:700px;background:#FFF8EC;border:1px solid rgba(255,159,10,.4);border-radius:12px;padding:10px 14px;font-size:13px;align-items:center;gap:10px;flex-wrap:wrap}
+.histbar{display:none;width:100%;max-width:1120px;background:#FFF8EC;border:1px solid rgba(255,159,10,.4);border-radius:12px;padding:10px 14px;font-size:13px;align-items:center;gap:10px;flex-wrap:wrap}
 .histbar.show{display:flex}
 .review{margin:0 14px 14px;background:var(--glass);backdrop-filter:blur(20px) saturate(180%);border:1px solid var(--hair);border-radius:18px;padding:16px 18px;box-shadow:var(--shadow)}
 .review h3{font-size:16.5px;font-weight:700;letter-spacing:-.02em;line-height:1.3}.review .what{font-size:13.5px;color:#3A3A3C;line-height:1.55;margin-top:6px}.review .why,.review .reason{font-size:13px;color:var(--sub);line-height:1.55;margin-top:4px}
@@ -108,7 +122,7 @@ input.ba{width:min(420px,80%);accent-color:var(--blue)}
 </head>
 <body>
 <header><div class="header-in">
-  <span class="wordmark"><i></i>Muse Maker</span>
+  <span class="wordmark"><img src="/logo.svg" alt="" width="22" height="22" style="display:block">Muse Maker</span>
   <span class="brain" id="brainBadge">Connecting…</span>
   <div class="seg" id="plannerSeg" style="margin-left:0" title="Which Muse plans your queue. Spark is cheaper; Wonder plans deeper."><button data-pm="muse-spark-1.3" type="button">Planner · Spark</button><button data-pm="muse-wonder-1.0" type="button">Wonder</button></div>
   <span class="live"><i></i><span id="liveText">Team</span></span>
@@ -128,6 +142,7 @@ input.ba{width:min(420px,80%);accent-color:var(--blue)}
 </div>
 
 <section id="onboard" style="display:none;max-width:760px;margin:8vh auto 40px;padding:0 22px;text-align:center">
+  <img src="/logo.svg" alt="Muse Maker" width="58" height="58" style="display:block;margin:0 auto 18px">
   <h1 style="font-size:42px;letter-spacing:-.03em;line-height:1.08">Create something<br>you can see.</h1>
   <p style="color:var(--sub);font-size:16px;line-height:1.6;margin-top:14px">Describe it in plain English. A team of Muse agents builds it step by step — and you approve every change by looking at it, not reading about it.</p>
   <div style="display:flex;gap:8px;justify-content:center;margin-top:24px;flex-wrap:wrap">
@@ -153,12 +168,14 @@ input.ba{width:min(420px,80%);accent-color:var(--blue)}
       <button class="btn btn-sm" id="fsBtn" type="button">Full screen</button>
       <button class="btn btn-sm" id="downloadBtn" type="button">Download</button>
       <button class="btn btn-sm" id="rebuildBtn" type="button" style="display:none">Rebuild</button>
+      <button class="btn btn-sm" id="runAppBtn" type="button" style="display:none">Build + Run</button>
       <div class="seg" id="modeSeg" style="margin-left:auto">
         <button data-mode="before" type="button">Before</button>
         <button data-mode="slider" class="on" type="button">Compare</button>
         <button data-mode="after" type="button">After</button>
       </div>
     </div>
+    <div class="status-strip" id="statusStrip"><span class="dot"></span><div class="main"><span class="title">Loading…</span><div class="sub"></div></div></div>
     <div class="stage" id="stage">
       <div class="frame" id="frame">
         <iframe id="frameBefore" title="Before"></iframe>
@@ -237,6 +254,7 @@ input.ba{width:min(420px,80%);accent-color:var(--blue)}
 <script>
 const $ = id => document.getElementById(id);
 let S = null, curProject = null, selectedId = null, mode = "slider", compare = 58, agentFilter = null, viewingHash = null, toastTimer = null, newColor = "#0071E3", busy = false, interact = false, selectedTemplate = "blank";
+try { curProject = localStorage.getItem("mm-project") || null; selectedId = localStorage.getItem("mm-selected") || null; } catch(e) { /* private mode */ }
 function renderTemplates(){
   const list=(S?.templates?.[$("npType").value])||[{id:"blank",label:"Blank canvas"}];
   if(!list.find(t=>t.id===selectedTemplate)) selectedTemplate="blank";
@@ -263,6 +281,26 @@ const pTasks = () => S ? S.tasks.filter(t=>t.projectId===curProject) : [];
 const queue = () => pTasks().filter(t=>t.status==="todo"||t.status==="doing").sort((a,b)=>a.priority-b.priority||a.createdAt-b.createdAt);
 const selTask = () => pTasks().find(t=>t.id===selectedId) || queue()[0] || pTasks().find(t=>t.status==="review") || pTasks()[0];
 const bust = () => Date.now();
+function fmtDur(ms){ if(!ms || ms < 0) ms = 0; const s = Math.floor(ms / 1000); const h = Math.floor(s / 3600); const m = Math.floor((s % 3600) / 60); const ss = String(s % 60).padStart(2, "0"); return h ? `${h}:${String(m).padStart(2, "0")}:${ss}` : `${m}:${ss}`; }
+function fmtTime(ts){ return ts ? new Date(ts).toLocaleTimeString([], {hour:"numeric", minute:"2-digit"}) : ""; }
+function renderStatus(){
+  const p = proj(), el = $("statusStrip"); if(!p || !el) return;
+  const ts = pTasks(); const doing = ts.find(t=>t.status==="doing"); const review = ts.find(t=>t.status==="review"); const sel = selTask(); const next = queue().find(t=>t.status==="todo");
+  const doneCount = ts.filter(t=>t.status==="done").length; const savedCount = (p.history || []).length;
+  let cls = "ok", title = "Ready", sub = next ? `Next up: “${next.title}” (${(S.agents[next.agent]||FALLBACK_A).name})` : "Nothing is queued right now.";
+  if (doing) { cls = "doing"; title = `${(S.agents[doing.agent]||FALLBACK_A).name} is working · <span class="js-elapsed" data-start="${doing.startedAt || Date.now()}">${fmtDur(Date.now() - (doing.startedAt || Date.now()))}</span>`; sub = doing.phase || "Working on the real files — this updates as phases change."; }
+  else if (sel?.status === "todo" && sel.error) { cls = "bad"; title = "Stopped before finishing"; sub = sel.error; }
+  else if (review) { cls = "review"; title = "Ready for your eyes"; sub = `“${review.title}” is waiting — approve it above the review card when it looks right.`; }
+  else if (p.build?.running) { cls = "doing"; title = "Building now…"; sub = "The build is running on this Mac; the picture updates when it finishes."; }
+  else if (p.build && p.build.ok === false) { cls = "bad"; title = "Last build didn't finish"; sub = (p.build.log || "Open Build to see the log.").split("\n").filter(Boolean).slice(-1)[0] || "Press Build to try again."; }
+  else if (p.build?.ok) { title = `Build OK · ${fmtTime(p.build.at)}`; sub = p.kind === "mac" ? (p.screen === "screenshot" ? "You are seeing a real screenshot from the project." : "You are seeing the UI sketch; the compiled app is ready on this Mac.") : p.kind === "unity" ? "The game build finished; the picture is the latest build screen." : "The latest run finished and the output is current."; }
+  if (!doing && p.dirty) sub += " Files have unsaved work — it auto-saves before the next step.";
+  const isNW = p.kind === "mac" || p.kind === "unity" || p.kind === "python";
+  const checks = isNW ? `<span class="checks"><span class="check ${p.dirty ? "warn" : ""}">${p.dirty ? "Files · unsaved" : "Files · saved"}</span><span class="check ${p.build?.ok ? "" : "warn"}">${p.build?.running ? "Build · running" : p.build?.ok ? "Build · OK" : p.build ? "Build · failed" : "Build · not run"}</span><span class="check ${p.screen === "screenshot" ? "" : "warn"}">Screen · ${p.screen === "screenshot" ? "real screenshot" : p.screen === "report" ? "live report" : "sketch"}</span>${p.kind === "mac" || p.kind === "unity" ? `<span class="check ${p.run?.ok ? "" : "warn"}">${p.run?.ok ? `Opened · ${fmtTime(p.run.at)}` : "Not opened"}</span>` : ""}<span class="check">${savedCount} saved step${savedCount === 1 ? "" : "s"}</span></span>` : `<span class="checks"><span class="check">${doneCount} approved</span><span class="check">${savedCount} saved step${savedCount === 1 ? "" : "s"}</span></span>`;
+  el.className = `status-strip ${cls}`;
+  el.innerHTML = `<span class="dot"></span><div class="main"><span class="title">${title}</span><div class="sub">${sub}</div></div>${checks}`;
+}
+setInterval(()=>{ document.querySelectorAll(".js-elapsed").forEach(el=>{ el.textContent = fmtDur(Date.now() - Number(el.dataset.start || Date.now())); }); }, 1000);
 function toast(m){ const t=$("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),3400); }
 async function api(path, method="GET", body){
   const r = await fetch(path, { method, headers: body?{"Content-Type":"application/json"}:undefined, body: body?JSON.stringify(body):undefined });
@@ -297,7 +335,7 @@ function renderProjects(){
   $("projSeg").querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{curProject=b.dataset.p; selectedId=null; viewingHash=null; load();});
   $("projSeg").querySelector("[data-new]").onclick=()=>$("projectOverlay").classList.add("open");
   const p=proj(); if(!p) return;
-  $("projName").textContent=p.name; const usage=S.tasks.filter(x=>x.projectId===p.id).reduce((n,x)=>n+(x.tokens||0)+(x.planTokens||0)+(x.check?.tokens||0),0); const isNW2=p.kind==="mac"||p.kind==="unity"; $("rebuildBtn").style.display=(p.framework||isNW2||p.kind==="python")?"inline-block":"none"; $("rebuildBtn").textContent=p.framework?"Rebuild":"Build"; $("projType").textContent={website:"Website",app:"Mobile app",poster:"Poster",dashboard:"Dashboard",slides:"Slides",shop:"Shop",react:"React app (Vite)",python:"Python tool",mac:"Mac app",unity:"Unity game"}[p.type]+(p.framework?(p.setup==="installing"?" · installing packages…":p.setup==="failed"?" · setup failed — try Rebuild":" · built & live"):isNW2?" · shown as latest build screen":p.kind==="python"?" · runs on your Mac, report shown live":"")+" · saved as real files + git"+(usage?` · Muse usage so far: ${(usage/1000).toFixed(1)}k tokens`:"")+(p.budget?` · budget: ${(usage/1000).toFixed(0)}k / ${(p.budget/1000).toFixed(0)}k`:""); $("budgetBtn").textContent=p.budget?`Budget ${(usage/1000).toFixed(0)}k/${(p.budget/1000).toFixed(0)}k`:"Set budget";
+  $("projName").textContent=p.name; const usage=S.tasks.filter(x=>x.projectId===p.id).reduce((n,x)=>n+(x.tokens||0)+(x.planTokens||0)+(x.check?.tokens||0),0); const isNW2=p.kind==="mac"||p.kind==="unity"; $("rebuildBtn").style.display=(p.framework||isNW2||p.kind==="python")?"inline-block":"none"; $("rebuildBtn").textContent=p.framework?"Rebuild":"Build"; $("runAppBtn").style.display=(isNW2||p.kind==="python")?"inline-block":"none"; $("runAppBtn").textContent=p.kind==="python"?"Run":"Build + Run"; $("projType").textContent={website:"Website",app:"Mobile app",poster:"Poster",dashboard:"Dashboard",slides:"Slides",shop:"Shop",react:"React app (Vite)",python:"Python tool",mac:"Mac app",unity:"Unity game"}[p.type]+(p.framework?(p.setup==="installing"?" · installing packages…":p.setup==="failed"?" · setup failed — try Rebuild":" · built & live"):isNW2?" · shown as latest build screen":p.kind==="python"?" · runs on your Mac, report shown live":"")+" · saved as real files + git"+(usage?` · Muse usage so far: ${(usage/1000).toFixed(1)}k tokens`:"")+(p.budget?` · budget: ${(usage/1000).toFixed(0)}k / ${(p.budget/1000).toFixed(0)}k`:""); $("budgetBtn").textContent=p.budget?`Budget ${(usage/1000).toFixed(0)}k/${(p.budget/1000).toFixed(0)}k`:"Set budget";
   $("addr").textContent="projects/"+p.dir+(p.kind==="python"?"/main.py → report":isNW2?"":"/index.html");
   $("frame").className="frame"+(p.type==="app"?" phone":p.type==="poster"?" poster":"");
   const b=$("brainBadge");
@@ -309,7 +347,7 @@ function taskRow(t, qn){
   const a=S.agents[t.agent]||FALLBACK_A;
   return `<button class="task ${t.id===selectedId?"sel":""}" data-t="${t.id}" type="button">
     <span class="qnum ${t.status==="review"?"review":t.status==="done"?"done":""}">${t.status==="done"?"✓":t.status==="review"?"!":qn}</span>
-    <span style="flex:1;min-width:0"><b>${t.title}</b><span>${a.name} · ${a.role}${t.status==="doing"?" · working…":""}${t.executorNote?" · local edit":""}</span>${t.executor?`<span>${t.executor.replace("muse:","Muse ")}${t.tokens?` · ${(t.tokens/1000).toFixed(1)}k tokens`:""}${t.diff?` · +${t.diff.add} −${t.diff.del} lines`:""}</span>`:""}
+    <span style="flex:1;min-width:0"><b>${t.title}</b><span>${a.name} · ${a.role}${t.status==="doing"?` · ${t.phase || "working"} · <span class="js-elapsed" data-start="${t.startedAt || Date.now()}">${fmtDur(Date.now() - (t.startedAt || Date.now()))}</span>`:""}${t.status==="todo"&&t.error?" · stopped — run again":""}${t.executorNote?" · local edit":""}</span>${t.executor?`<span>${t.executor.replace("muse:","Muse ")}${t.tokens?` · ${(t.tokens/1000).toFixed(1)}k tokens`:""}${t.diff?` · +${t.diff.add} −${t.diff.del} lines`:""}</span>`:""}
     ${t.status==="doing"?`<span class="bar"><i style="width:${t.progress}%"></i></span>`:""}</span>
     ${t.status==="todo"?`<span><span class="mini" data-up="${t.id}" title="Move up">↑</span><span class="mini" data-down="${t.id}" title="Move down">↓</span></span>`:""}
   </button>`;
@@ -392,7 +430,7 @@ function renderReview(){
   const a=S.agents[t.agent]||FALLBACK_A;
   let foot="";
   if(t.status==="todo") foot=`<button class="btn btn-primary" id="runBtn" type="button" ${busy?"disabled":""}>${busy?"Working…":"Run this step"}</button><span style="font-size:12.5px;color:var(--sub)">${a.name} will edit the real files. You'll approve the visual after.</span>`;
-  if(t.status==="doing") foot=`<span style="font-size:13px;color:var(--blue)">Working on the real files…</span>`;
+  if(t.status==="doing") foot=`<span style="font-size:13px;color:var(--blue)">${t.phase || "Working on the real files…"} · <span class="js-elapsed" data-start="${t.startedAt || Date.now()}">${fmtDur(Date.now() - (t.startedAt || Date.now()))}</span></span><span class="bar" style="flex:1;min-width:120px"><i style="width:${t.progress || 0}%"></i></span>`;
   if(t.status==="review") foot=`<span style="font-size:12.5px;color:var(--sub)">Compare above, then decide — nothing is final until you approve.</span><span class="spacer"></span><button class="btn" id="tweakBtn" type="button">Ask for a tweak</button><button class="btn" id="undoBtn" type="button">Undo step</button><button class="btn btn-primary" id="approveBtn" type="button">Approve</button>`;
   let checkLine="";
   if(t.check) checkLine=`<div class="review-foot"><span style="font-size:13px;${t.check.verdict==="pass"?"color:#248A3D":t.check.verdict==="fix"?"color:#9A6700":"color:var(--sub)"}">${t.check.verdict==="pass"?"✓":t.check.verdict==="fix"?"⚠":"·"} <b>${checkerA().name} checked:</b> ${t.check.note} <span style="color:var(--faint)">(Muse Spark${t.check.tokens?` · ${(t.check.tokens/1000).toFixed(1)}k tokens`:""})</span></span></div>`;
@@ -436,7 +474,7 @@ function renderTeam(){
   $("feed").innerHTML=S.feed.slice(0,7).map(f=>{ const fa=S.agents[f.agent]; const who=fa?fa.name:(f.agent==="you"?"You":"Team"); const text=f.text.includes("<b>")?f.text:`<b>${who}</b> ${f.text}`; return `<div class="feed-item">${fa?avHTML(fa,true):'<span class="av av-sm" style="background:#1D1D1F"><span style="font-size:11px;font-weight:800">You</span></span>'}<p>${text} <time>· ${new Date(f.at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</time></p></div>`; }).join("")||`<p style="font-size:12.5px;color:var(--sub);padding:6px 4px">Quiet for now.</p>`;
   $("liveText").textContent = pTasks().some(t=>t.status==="doing") ? "Working now" : "Team ready";
 }
-function renderAll(){ if(!S) return; const empty=S.projects.length===0; $("onboard").style.display=empty?"block":"none"; $("mainLayout").style.display=empty?"none":"grid"; $("projbar").style.display=empty?"none":"flex"; document.querySelector(".foot-note").style.display=empty?"none":"block"; if(empty){ const b=$("brainBadge"); b.textContent=S.brain.label; b.classList.add("ai"); document.title="Muse Maker — See what your agents built"; return; } renderProjects(); renderTasks(); renderPreview(); renderReview(); renderTeam(); renderTemplates();
+function renderAll(){ if(!S) return; try { if(curProject) localStorage.setItem("mm-project", curProject); if(selectedId) localStorage.setItem("mm-selected", selectedId); } catch(e) { /* private mode */ } const empty=S.projects.length===0; $("onboard").style.display=empty?"block":"none"; $("mainLayout").style.display=empty?"none":"grid"; $("projbar").style.display=empty?"none":"flex"; document.querySelector(".foot-note").style.display=empty?"none":"block"; if(empty){ const b=$("brainBadge"); b.textContent=S.brain.label; b.classList.add("ai"); document.title="Muse Maker — See what your agents built"; return; } renderProjects(); renderTasks(); renderStatus(); renderPreview(); renderReview(); renderTeam(); renderTemplates();
   const n=pTasks().filter(t=>t.status==="review").length; document.title=n?`(${n}) Muse Maker — needs your eyes`:"Muse Maker — See what your agents built"; }
 
 /* compare */
@@ -492,9 +530,13 @@ $("agDelete").onclick = async () => {
   catch (e) { $("agMsg").textContent = e.message; $("agMsg").style.color = "#B3261E"; }
 };
 $("rebuildBtn").onclick=async()=>{ if(!curProject) return; const b=$("rebuildBtn"); const isNW3=(proj()?.kind==="mac"||proj()?.kind==="unity"||proj()?.kind==="python"); b.disabled=true; b.textContent="Building…"; try{ const r=await api(`/api/projects/${curProject}/build`,"POST",{}); toast(r.setup==="installing"?"Installing packages — this can take a minute. The page refreshes itself.":isNW3?"Built — the screen in the middle is up to date.":"Rebuilt — your app is live."); await load(true); }catch(e){ toast("Build didn't finish — the note under the screen says why."); await load(); } b.disabled=false; b.textContent=proj()?.framework?"Rebuild":"Build"; };
+$("runAppBtn").onclick=async()=>{ if(!curProject) return; const b=$("runAppBtn"); const kind=proj()?.kind; b.disabled=true; b.textContent=kind==="unity"?"Building… (Unity can take a few minutes)":"Building + opening…"; try{ await api(`/api/projects/${curProject}/run`,"POST",{}); toast(kind==="python"?"Ran it — the report in the middle is fresh.":"Built and opened on your Mac — look for the app window."); await load(true); }catch(e){ toast("Build + Run didn't finish — the status strip says why."); await load(); } b.disabled=false; b.textContent=kind==="python"?"Run":"Build + Run"; };
 /* gentle polling: picks up finished steps / React setup, and fires notifications */
-const sigOf = s => JSON.stringify([s.tasks.map(t=>[t.id,t.status,t.commit]), s.projects.map(p=>[p.id,p.setup])]);
-setInterval(async()=>{ if(busy || document.querySelector(".overlay.open") || !S) return; try{ const fresh=await api("/api/state"); if(sigOf(fresh)!==sigOf(S)){ S=fresh; notifyNewReviews(); if(!proj()) curProject=S.projects[0]?.id; renderAll(); } }catch(e){ /* server momentarily busy */ } }, 20000);
+const sigOf = s => JSON.stringify(s);
+async function pollState(){ if(busy || document.querySelector(".overlay.open") || !S) return; try{ const fresh=await api("/api/state"); if(sigOf(fresh)!==sigOf(S)){ S=fresh; notifyNewReviews(); if(!proj()) curProject=S.projects[0]?.id; renderAll(); } }catch(e){ /* server momentarily busy */ } }
+setInterval(pollState, 5000);
+document.addEventListener("visibilitychange", ()=>{ if(!document.hidden) pollState(); });
+window.addEventListener("focus", pollState);
 $("budgetBtn").onclick=async()=>{ const p=proj(); if(!p) return; const usage=S.tasks.filter(x=>x.projectId===p.id).reduce((n,x)=>n+(x.tokens||0)+(x.planTokens||0)+(x.check?.tokens||0),0); const v=prompt(`Muse token budget for “${p.name}”.\nUsed so far: ${usage.toLocaleString()} tokens.\nEnter a maximum (0 = no limit). When it's reached, steps use the free local fallback and tell you.`, String(p.budget||0)); if(v===null) return; const n=Number(v); if(!Number.isFinite(n)||n<0){ toast("That wasn't a number — budget unchanged."); return; } await api(`/api/projects/${p.id}/budget`,"POST",{budget:n}); await load(); toast(n?`Budget set: ${n.toLocaleString()} tokens for this project.`:"Budget removed — no limit."); };
 function openProjectModal(){ $("projectOverlay").classList.add("open"); renderTemplates(); setTimeout(()=>$("npName").focus(),60); }
 $("obCreate").onclick=openProjectModal;
