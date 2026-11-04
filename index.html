@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Muse Maker — See what your agents built</title>
+<style>
+:root{
+  --bg:#F5F5F7; --ink:#1D1D1F; --sub:#86868B; --faint:#AEAEB2;
+  --blue:#0071E3; --blue-hover:#0077ED; --green:#34C759; --orange:#FF9F0A; --red:#FF3B30;
+  --glass:rgba(255,255,255,.72); --glass-strong:rgba(255,255,255,.86);
+  --hair:rgba(0,0,0,.07); --shadow:0 4px 24px rgba(0,0,0,.06),0 1px 3px rgba(0,0,0,.04);
+  --shadow-lg:0 24px 64px rgba(0,0,0,.14);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+button{font:inherit;cursor:pointer;color:inherit}
+h1,h2,h3,p{margin:0}
+::selection{background:#B9D9F8}
+/* glass header */
+header{position:sticky;top:0;z-index:60;background:var(--glass);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid var(--hair)}
+.header-in{max-width:1440px;margin:0 auto;height:54px;padding:0 22px;display:flex;align-items:center;gap:18px}
+.wordmark{font-size:15px;font-weight:700;letter-spacing:-.02em;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.wordmark i{width:9px;height:9px;border-radius:3px;background:var(--ink);display:block}
+.live{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--sub);margin-left:auto;white-space:nowrap}
+.live i{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(52,199,89,.45)}55%{box-shadow:0 0 0 6px rgba(52,199,89,0)}}
+.btn{border:0;border-radius:999px;padding:8px 16px;font-size:13.5px;font-weight:600;background:#E8E8ED;color:var(--ink);transition:background .15s,transform .1s}
+.btn:hover{background:#DEDEE3}.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--blue);color:#fff}.btn-primary:hover{background:var(--blue-hover)}
+.btn-dark{background:var(--ink);color:#fff}.btn-dark:hover{background:#000}
+.btn-sm{padding:6px 13px;font-size:12.5px}
+.btn-ghost{background:transparent;color:var(--blue);padding:6px 8px}.btn-ghost:hover{background:transparent;text-decoration:underline}
+/* project bar */
+.projbar{max-width:1440px;margin:0 auto;padding:26px 22px 4px;display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.projbar h1{font-size:30px;font-weight:700;letter-spacing:-.03em;line-height:1.1}
+.projbar .type{font-size:14px;color:var(--sub);margin-top:5px}
+.seg{display:flex;background:rgba(120,120,128,.14);border-radius:999px;padding:2px;margin-left:auto}
+.seg button{border:0;background:transparent;border-radius:999px;padding:6px 14px;font-size:13px;font-weight:600;color:#3A3A3C}
+.seg button.on{background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.14);color:var(--ink)}
+.seg button.new{color:var(--blue)}
+/* layout */
+.layout{max-width:1440px;margin:0 auto;padding:18px 22px 36px;display:grid;grid-template-columns:252px minmax(0,1fr) 252px;gap:20px;align-items:start}
+@media(max-width:1120px){.layout{grid-template-columns:230px minmax(0,1fr)}.col-team{display:none}}
+@media(max-width:760px){.layout{grid-template-columns:1fr}.col-team{display:block}.projbar h1{font-size:24px}}
+.card{background:var(--glass-strong);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border:1px solid var(--hair);border-radius:20px;box-shadow:var(--shadow)}
+.card-h{padding:16px 18px 6px;display:flex;align-items:baseline;gap:8px}
+.card-h h2{font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--sub)}
+.card-h .n{font-size:12.5px;color:var(--faint)}
+.card-h .link{margin-left:auto;font-size:12.5px;color:var(--blue);background:none;border:0;font-weight:600}
+/* tasks — minimal list */
+.tabs{display:flex;gap:16px;padding:8px 18px 4px;font-size:13px}
+.tabs button{background:none;border:0;padding:4px 0;color:var(--sub);font-weight:600;border-bottom:2px solid transparent}
+.tabs button.on{color:var(--ink);border-color:var(--ink)}
+.task-list{padding:6px 8px 10px}
+.task{display:flex;gap:10px;width:100%;text-align:left;background:transparent;border:0;border-radius:12px;padding:10px 10px;align-items:flex-start}
+.task:hover{background:rgba(120,120,128,.08)}
+.task.sel{background:#fff;box-shadow:0 1px 5px rgba(0,0,0,.08)}
+.dot{width:8px;height:8px;border-radius:50%;margin-top:6px;flex:none}
+.dot-review{background:var(--orange)}.dot-doing{background:var(--blue)}.dot-todo{background:#C7C7CC}.dot-done{background:var(--green)}
+.task b{font-size:13.5px;font-weight:600;line-height:1.35;display:block;letter-spacing:-.01em}
+.task span{font-size:12px;color:var(--sub);display:block;margin-top:2px;line-height:1.35}
+.task .bar{height:3px;background:rgba(120,120,128,.18);border-radius:99px;margin-top:7px;overflow:hidden}
+.task .bar i{display:block;height:100%;background:var(--blue);border-radius:99px;transition:width .5s}
+.empty{padding:22px 18px;font-size:13px;color:var(--sub);text-align:center;line-height:1.5}
+/* canvas */
+.canvas-card{overflow:hidden;border-radius:24px}
+.canvas-top{display:flex;align-items:center;gap:10px;padding:12px 16px}
+.canvas-top .addr{font-size:12.5px;color:var(--sub);background:rgba(120,120,128,.1);border-radius:8px;padding:5px 12px}
+.canvas-top .seg{margin-left:auto}
+.stage{background:#FBFBFD;border-top:1px solid var(--hair);padding:30px 22px 22px;display:flex;flex-direction:column;align-items:center;gap:16px;min-height:480px;justify-content:center}
+.frame{background:#fff;border-radius:14px;box-shadow:var(--shadow-lg);overflow:hidden;position:relative;width:100%;transition:max-width .3s}
+.frame.browser{max-width:660px}.frame.phone{max-width:330px;border-radius:34px;border:1px solid rgba(0,0,0,.1)}
+.frame.poster{max-width:380px}.frame.wide{max-width:700px}
+.layer-after{position:absolute;inset:0;background:#fff}
+.handle{position:absolute;top:0;bottom:0;width:1.5px;background:var(--blue);z-index:6;cursor:ew-resize}
+.knob{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:34px;height:34px;border-radius:50%;background:#fff;color:var(--ink);display:grid;place-items:center;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.22);border:.5px solid var(--hair);user-select:none}
+.pin{position:absolute;z-index:7;width:22px;height:22px;border-radius:50%;background:var(--blue);color:#fff;border:2px solid #fff;font-size:11px;font-weight:700;display:grid;place-items:center;box-shadow:0 3px 10px rgba(0,122,255,.4);cursor:pointer;padding:0}
+input.ba{width:min(420px,80%);accent-color:var(--blue)}
+.stage-note{font-size:12.5px;color:var(--sub);text-align:center;max-width:520px;line-height:1.5}
+/* review sheet — one floating strip, not stacked boxes */
+.review{margin:0 14px 14px;background:var(--glass);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border:1px solid var(--hair);border-radius:18px;padding:16px 18px;box-shadow:var(--shadow)}
+.review h3{font-size:16.5px;font-weight:700;letter-spacing:-.02em;line-height:1.3}
+.review .what{font-size:13.5px;color:#3A3A3C;line-height:1.55;margin-top:6px}
+.review .why{font-size:13px;color:var(--sub);line-height:1.55;margin-top:4px}
+.review-foot{display:flex;align-items:center;gap:8px;margin-top:13px;flex-wrap:wrap}
+.avatars{display:flex}
+.avatars .av{margin-left:-7px;border:2px solid #fff}.avatars .av:first-child{margin-left:0}
+.review-foot .who{font-size:12.5px;color:var(--sub)}
+.checked{font-size:12.5px;color:#248A3D;display:flex;gap:5px;align-items:center}
+.spacer{flex:1}
+.status-word{font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:rgba(255,159,10,.16);color:#9A6700;white-space:nowrap}
+.status-word.doing{background:rgba(0,113,227,.12);color:var(--blue)}.status-word.done{background:rgba(52,199,89,.15);color:#248A3D}.status-word.todo{background:rgba(120,120,128,.14);color:#636366}
+/* team — quiet */
+.agent{display:flex;gap:11px;align-items:center;padding:9px 18px;width:100%;background:none;border:0;text-align:left;border-radius:0}
+.agent:hover{background:rgba(120,120,128,.06)}
+.agent.sel{background:#fff;box-shadow:inset 0 0 0 1px var(--hair)}
+.av{width:34px;height:34px;border-radius:50%;color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;flex:none}
+.av-mira{background:#E4573D}.av-kai{background:#0071E3}.av-noor{background:#30A46C}.av-leo{background:#8E8E93}.av-you{background:#1D1D1F}
+.agent b{font-size:13.5px;font-weight:600;display:block}
+.agent span{font-size:12px;color:var(--sub);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
+.agent .st{margin-left:auto;font-size:11.5px;color:var(--sub);white-space:nowrap}
+.agent .st i{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:5px}
+.feed{padding:4px 18px 14px}
+.feed p{font-size:12.5px;color:#3A3A3C;line-height:1.5;padding:7px 0;border-top:1px solid var(--hair)}
+.feed p:first-child{border-top:0}
+.feed time{color:var(--faint);font-size:11.5px}
+.banner{margin:10px 12px 4px;background:#FFF8EC;border:1px solid rgba(255,159,10,.35);border-radius:14px;padding:11px 13px;font-size:12.5px;line-height:1.45;width:calc(100% - 24px);text-align:left}
+.banner b{display:block;font-size:13px}
+/* visuals inside frames (project renders) */
+.v-nav{display:flex;align-items:center;gap:14px;padding:14px 18px;font-size:12px}
+.v-logo{font-weight:800;font-size:15px;letter-spacing:-.02em}
+.v-link{color:#8E8E93}.v-cta{margin-left:auto;border-radius:999px;padding:7px 14px;font-size:12px;font-weight:700}
+.v-hero{padding:26px 28px 30px}
+.v-hero h4{font-size:30px;line-height:1.08;letter-spacing:-.03em;margin:0 0 10px;font-weight:800}
+.v-hero p{font-size:13.5px;line-height:1.55;color:#6E6E73;max-width:340px}
+.v-btn{display:inline-block;margin-top:16px;border-radius:999px;padding:10px 20px;font-size:13px;font-weight:700}
+.v-row{display:flex;gap:10px;padding:0 18px 20px}
+.v-tile{flex:1;border-radius:12px;padding:12px;font-size:11.5px;line-height:1.4}
+.v-tile b{display:block;font-size:12.5px;margin-bottom:3px}
+.v-phone-head{padding:20px 18px 10px}.v-phone-head h4{font-size:22px;letter-spacing:-.02em;margin:0}
+.v-ring{width:150px;height:150px;margin:16px auto;border-radius:50%;display:grid;place-items:center}
+.v-ring-in{width:112px;height:112px;background:#fff;border-radius:50%;display:grid;place-items:center;text-align:center}
+.v-poster{padding:34px 26px;min-height:420px;display:flex;flex-direction:column}
+.v-poster h4{font-size:42px;line-height:.98;letter-spacing:-.03em;margin:0;font-weight:800}
+.v-chart{display:flex;align-items:flex-end;gap:12px;height:150px;padding:18px 22px 6px}
+.v-bar{flex:1;border-radius:8px 8px 3px 3px}
+.v-kpis{display:flex;gap:10px;padding:16px 18px 4px}
+.v-kpi{flex:1;background:#F5F5F7;border-radius:12px;padding:11px}.v-kpi b{font-size:19px;display:block;letter-spacing:-.02em}.v-kpi span{font-size:11px;color:#86868B}
+/* modal */
+.overlay{position:fixed;inset:0;background:rgba(245,245,247,.5);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:80;display:none;place-items:center;padding:20px}
+.overlay.open{display:grid}
+.modal{background:var(--glass-strong);backdrop-filter:blur(24px) saturate(180%);border:1px solid var(--hair);border-radius:22px;box-shadow:var(--shadow-lg);width:min(480px,100%);padding:24px}
+.modal h3{font-size:19px;letter-spacing:-.02em}
+.modal p{font-size:13px;color:var(--sub);margin-top:5px;line-height:1.5}
+.modal label{font-size:12.5px;font-weight:700;display:block;margin:16px 0 6px}
+.modal input,.modal textarea,.modal select{width:100%;border:1px solid rgba(0,0,0,.14);border-radius:11px;padding:10px 12px;font:inherit;font-size:14px;background:#fff}
+.modal textarea{min-height:74px;resize:vertical}
+.modal input:focus,.modal textarea:focus,.modal select:focus{outline:2px solid rgba(0,113,227,.35);border-color:var(--blue)}
+.modal .row{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+.swatches{display:flex;gap:8px;margin-top:2px}
+.swatches button{width:30px;height:30px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px var(--hair);padding:0}
+.swatches button.on{box-shadow:0 0 0 2px var(--blue)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,90px);background:rgba(29,29,31,.92);backdrop-filter:blur(12px);color:#fff;border-radius:999px;padding:11px 20px;font-size:13.5px;font-weight:600;box-shadow:var(--shadow-lg);transition:transform .35s cubic-bezier(.2,.9,.3,1.2);z-index:99;max-width:92vw;text-align:center}
+.toast.show{transform:translate(-50%,0)}
+.foot-note{max-width:1440px;margin:0 auto;padding:0 22px 28px;font-size:12px;color:var(--faint);line-height:1.6}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="header-in">
+    <span class="wordmark"><i></i>Muse Maker</span>
+    <span class="live"><i></i><span id="liveText">3 working</span></span>
+    <button class="btn btn-ghost" id="watchBtn" type="button">Watch them work</button>
+    <button class="btn btn-primary" id="openRequest" type="button">+ New request</button>
+  </div>
+</header>
+
+<div class="projbar">
+  <div><h1 id="projName">Aurora</h1><p class="type" id="projType">Coffee brand · Website</p></div>
+  <div class="seg" id="projSeg" role="tablist" aria-label="Projects"></div>
+</div>
+
+<main class="layout">
+  <!-- Tasks: one quiet list -->
+  <section class="card" aria-label="Requests">
+    <div class="card-h"><h2>Requests</h2><span class="n" id="taskCount"></span><button class="link" id="addQuick" type="button">+ Add</button></div>
+    <div class="tabs" id="tabs">
+      <button class="on" data-f="all" type="button">All</button>
+      <button data-f="review" type="button">For you</button>
+      <button data-f="done" type="button">Done</button>
+    </div>
+    <div class="task-list" id="taskList"></div>
+  </section>
+
+  <!-- Canvas: ANY visual project -->
+  <section class="card canvas-card" aria-label="Project preview">
+    <div class="canvas-top">
+      <span class="addr" id="addr">aurora.coffee</span>
+      <div class="seg" id="modeSeg">
+        <button data-mode="before" type="button">Before</button>
+        <button data-mode="slider" class="on" type="button">Compare</button>
+        <button data-mode="after" type="button">After</button>
+      </div>
+    </div>
+    <div class="stage" id="stage">
+      <div class="frame browser" id="frame">
+        <div id="layerBefore"></div>
+        <div class="layer-after" id="layerAfter"></div>
+        <div class="handle" id="handle"><span class="knob">‹ ›</span></div>
+        <div id="pins"></div>
+      </div>
+      <input type="range" class="ba" id="baRange" min="0" max="100" value="58" aria-label="Before and after comparison">
+      <p class="stage-note" id="stageNote"></p>
+    </div>
+    <div class="review" id="review"></div>
+  </section>
+
+  <!-- Team: quiet -->
+  <aside class="col-team">
+    <section class="card" aria-label="Team">
+      <div class="card-h"><h2>Team</h2><span class="n">tap to filter</span></div>
+      <div id="agentList"></div>
+      <div id="reviewBanner"></div>
+      <div class="card-h" style="padding-top:14px"><h2>Just now</h2></div>
+      <div class="feed" id="feed"></div>
+    </section>
+  </aside>
+</main>
+
+<p class="foot-note">Any project with visuals belongs in the middle — a website, an app, a poster, a dashboard. Muse Maker renders the real thing and diffs it visually.<br>Demo data for now; the same canvas is where a real project renderer plugs in.</p>
+
+<!-- New request -->
+<div class="overlay" id="requestOverlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-label="New request">
+    <h3>What should your team do?</h3>
+    <p>Say it like you'd tell a friend. You'll see a visual before anything ships.</p>
+    <label for="reqText">Your request</label>
+    <textarea id="reqText" placeholder="Make the headline bigger and warmer…"></textarea>
+    <label for="reqAgent">Who should do it?</label>
+    <select id="reqAgent">
+      <option value="auto">Pick the best person for me</option>
+      <option value="mira">Mira — Designer</option>
+      <option value="kai">Kai — Builder</option>
+      <option value="noor">Noor — Checker</option>
+      <option value="leo">Leo — Tester</option>
+    </select>
+    <div class="row"><button class="btn" data-close type="button">Cancel</button><button class="btn btn-primary" id="reqSubmit" type="button">Send to team</button></div>
+  </div>
+</div>
+
+<!-- New project -->
+<div class="overlay" id="projectOverlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-label="New project">
+    <h3>Start a project</h3>
+    <p>Anything visual. Muse Maker will set up the canvas your team works on.</p>
+    <label for="npName">Project name</label>
+    <input id="npName" placeholder="e.g. Bloom — flower shop">
+    <label for="npType">What is it?</label>
+    <select id="npType">
+      <option value="website">Website</option>
+      <option value="app">Mobile app</option>
+      <option value="poster">Poster / print</option>
+      <option value="dashboard">Dashboard</option>
+    </select>
+    <label>Pick a colour mood</label>
+    <div class="swatches" id="swatches">
+      <button data-c="#1D4ED8" style="background:#1D4ED8" class="on" type="button" aria-label="Blue"></button>
+      <button data-c="#0F766E" style="background:#0F766E" type="button" aria-label="Teal"></button>
+      <button data-c="#C2410C" style="background:#EA580C" type="button" aria-label="Warm orange"></button>
+      <button data-c="#1D1D1F" style="background:#1D1D1F" type="button" aria-label="Black"></button>
+      <button data-c="#7C2D12" style="background:#9A3412" type="button" aria-label="Earth"></button>
+    </div>
+    <label for="npDesc">Describe it in one line</label>
+    <input id="npDesc" placeholder="A calm studio for booking yoga classes">
+    <div class="row"><button class="btn" data-close type="button">Cancel</button><button class="btn btn-dark" id="npSubmit" type="button">Create project</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* Renderer registry: every project type renders BEFORE/AFTER visuals here.
+   A real project plugs its own renderer (DOM snapshot / screenshot) into this same map. */
+const AGENTS = {
+  mira:{name:"Mira", role:"Designer", cls:"av-mira", ini:"M", status:"Working", now:"Header polish"},
+  kai:{name:"Kai", role:"Builder", cls:"av-kai", ini:"K", status:"Working", now:"Building features"},
+  noor:{name:"Noor", role:"Checker", cls:"av-noor", ini:"N", status:"Checking", now:"Verifying changes"},
+  leo:{name:"Leo", role:"Tester", cls:"av-leo", ini:"L", status:"Waiting", now:"Ready to test"}
+};
+
+function siteVisual(p, v){
+  const n = v==="new";
+  return `<div class="v-nav"><span class="v-logo" style="color:${n?p.color:"#3A3A3C"}">${p.short}</span>
+    <span class="v-link">Menu</span><span class="v-link">Story</span><span class="v-link">Shop</span>
+    <span class="v-cta" style="background:${n?p.color:"#E8E8ED"};color:${n?"#fff":"#3A3A3C"}">Order</span></div>
+  <div class="v-hero" style="background:${n?p.tint:"#F5F5F7"}">
+    <h4 style="color:${n?p.color:"#1D1D1F"}">${n?p.headline:"Fresh coffee, delivered."}</h4>
+    <p>${n?p.sub:"Small-batch beans, roasted weekly and posted to your door."}</p>
+    <span class="v-btn" style="background:${n?p.color:"#1D1D1F"};color:#fff">${n?"Shop the roast":"Shop now"}</span></div>
+  <div class="v-row">
+    <span class="v-tile" style="background:${n?p.tint:"#F5F5F7"}"><b>Single origin</b>Rotating farms, traced.</span>
+    <span class="v-tile" style="background:${n?p.tint:"#F5F5F7"}"><b>Brew guides</b>60-second recipes.</span>
+    <span class="v-tile" style="background:${n?p.tint:"#F5F5F7"}"><b>Subscribe</b>Pause anytime.</span></div>`;
+}
+function appVisual(p, v){
+  const n = v==="new";
+  return `<div class="v-phone-head"><span style="font-size:11.5px;color:#86868B">${n?"Tuesday · Week 6":"Today"}</span><h4>${n?"You're on fire.":"My Activity"}</h4></div>
+  <div class="v-ring" style="background:conic-gradient(${p.color} ${n?78:42}%, #EDEDF0 0)"><span class="v-ring-in"><span><b style="font-size:24px">${n?"78%":"42%"}</b><br><span style="font-size:11px;color:#86868B">of goal</span></span></span></div>
+  <div class="v-row"><span class="v-tile" style="background:#F5F5F7"><b>${n?"12,480":"6,120"}</b>Steps</span><span class="v-tile" style="background:#F5F5F7"><b>${n?"5 runs":"2 runs"}</b>This week</span><span class="v-tile" style="background:${n?p.tint:"#F5F5F7"}"><b>${n?"🔥 12 days":"3 days"}</b>Streak</span></div>
+  <div style="padding:0 18px 20px"><span class="v-btn" style="background:${n?p.color:"#1D1D1F"};color:#fff;width:100%;text-align:center;box-sizing:border-box">${n?"Start today's run":"Start workout"}</span></div>`;
+}
+function posterVisual(p, v){
+  const n = v==="new";
+  return `<div class="v-poster" style="background:${n?p.color:"#EDEDF0"};color:${n?"#fff":"#1D1D1F"}">
+    <span style="font-size:12px;letter-spacing:.14em;font-weight:700;opacity:.75">NORD FEST · OSLO</span>
+    <h4 style="margin-top:auto">${n?"MUSIC<br>IN THE<br>DARK.":"Nord Music Festival 2026"}</h4>
+    <p style="font-size:13px;line-height:1.5;opacity:.85;margin-top:14px">${n?"14 acts. One Arctic night. Aug 21–23.":"August 21–23 · Waterfront stage · Tickets soon."}</p>
+    <span class="v-btn" style="background:${n?"#fff":p.color};color:${n?p.color:"#fff"};align-self:flex-start">${n?"Get tickets":"Learn more"}</span></div>`;
+}
+function dashVisual(p, v){
+  const n = v==="new"; const bars = n?[38,62,50,84,70,96]:[30,34,28,40,36,44];
+  return `<div class="v-nav"><span class="v-logo">Clarity</span><span class="v-link">Overview</span><span class="v-link">Customers</span><span class="v-cta" style="background:${n?p.color:"#E8E8ED"};color:${n?"#fff":"#3A3A3C"}">Export</span></div>
+  <div class="v-kpis"><span class="v-kpi"><b>${n?"€48.2k":"€31.4k"}</b><span>Revenue ${n?"· +18%":"this month"}</span></span><span class="v-kpi"><b>${n?"3,204":"2,410"}</b><span>Customers</span></span><span class="v-kpi"><b>${n?"4.9%":"3.1%"}</b><span>Conversion</span></span></div>
+  <div class="v-chart">${bars.map(b=>`<span class="v-bar" style="height:${b}%;background:${n?p.color:"#C7C7CC"}"></span>`).join("")}</div>
+  <p style="padding:2px 22px 18px;font-size:11.5px;color:#86868B">${n?"Revenue is climbing since the new checkout.":"January — June"}</p>`;
+}
+const RENDERERS = { website:siteVisual, app:appVisual, poster:posterVisual, dashboard:dashVisual };
+const FRAME_FOR = { website:"browser", app:"phone", poster:"poster", dashboard:"wide" };
+const TYPE_LABEL = { website:"Website", app:"Mobile app", poster:"Poster", dashboard:"Dashboard" };
+
+let PROJECTS = [
+  {id:"aurora", name:"Aurora", short:"Aurora", kind:"Coffee brand", type:"website", addr:"aurora.coffee", color:"#9A3412", tint:"#FFF4EC", headline:"Coffee worth slowing down for.", sub:"Small-batch beans from farms we know by name, roasted the week they ship.",
+   tasks:[
+     {id:"a1", title:"Warmer headline + story-led hero", agent:"mira", status:"review", progress:100, what:"Headline now leads with feeling, hero warmed with the brand tint, tiles tell the farm story.", why:"Visitors decide in 3 seconds. Warmth + story is why they'd choose Aurora over a supermarket bag.", pins:[{x:"16%",y:"118px",t:"New headline"},{x:"82%",y:"52px",t:"Warmer brand colour"}]},
+     {id:"a2", title:"One-tap reorder for subscribers", agent:"kai", status:"doing", progress:64, what:"A reorder button is being added for returning subscribers.", why:"Regulars reorder the same bag. One tap removes all friction.", pins:[]},
+     {id:"a3", title:"Check contrast on the new tint", agent:"noor", status:"todo", progress:0, what:"Noor will verify text stays readable on the warm background.", why:"Beautiful is useless if it's hard to read.", pins:[]}
+   ]},
+  {id:"pulse", name:"Pulse", short:"Pulse", kind:"Fitness app", type:"app", addr:"Pulse · iPhone", color:"#0071E3", tint:"#EAF3FE", headline:"", sub:"",
+   tasks:[
+     {id:"p1", title:"Celebrate the streak, don't just count it", agent:"mira", status:"review", progress:100, what:"Goal ring now fills to 78% in brand blue, streak shown as a 12-day flame, button invites today's run.", why:"People keep streaks they can see. Celebration is the retention feature.", pins:[{x:"50%",y:"150px",t:"Goal ring + streak"}]},
+     {id:"p2", title:"Apple Watch sync", agent:"kai", status:"doing", progress:35, what:"Workouts from Watch will appear here automatically.", why:"Manual logging is where people quit.", pins:[]},
+     {id:"p3", title:"Test one-handed on a run", agent:"leo", status:"todo", progress:0, what:"Leo will test every tap while actually running.", why:"If it fails mid-run, it fails.", pins:[]}
+   ]},
+  {id:"nord", name:"Nord Fest", short:"Nord Fest", kind:"Festival poster", type:"poster", addr:"Print · A2 poster", color:"#111827", tint:"#EDEDF0", headline:"", sub:"",
+   tasks:[
+     {id:"n1", title:"Bold black poster, type as the image", agent:"mira", status:"review", progress:100, what:"Poster is now solid black with huge stacked type — no photo needed. It reads from across the street.", why:"Posters compete for 1 second of attention. Big type on black wins it.", pins:[{x:"30%",y:"220px",t:"Oversized type"}]},
+     {id:"n2", title:"Add lineup + ticket QR", agent:"kai", status:"todo", progress:0, what:"Full lineup and a scannable ticket code go at the foot.", why:"Interest is useless if you can't act on it in 5 seconds.", pins:[]}
+   ]},
+  {id:"clarity", name:"Clarity", short:"Clarity", kind:"Sales dashboard", type:"dashboard", addr:"clarity.app/overview", color:"#0071E3", tint:"#EAF3FE", headline:"", sub:"",
+   tasks:[
+     {id:"c1", title:"Show growth, not just numbers", agent:"kai", status:"review", progress:100, what:"Bars now climb to +18%, KPIs show revenue and conversion gains in blue.", why:"Owners don't need more numbers. They need to see 'are we winning?' at a glance.", pins:[{x:"70%",y:"200px",t:"Growth chart"}]},
+     {id:"c2", title:"Weekly email digest", agent:"noor", status:"doing", progress:50, what:"A Monday summary of these same charts, by email.", why:"Most owners never open dashboards. The digest comes to them.", pins:[]}
+   ]}
+];
+let FEED = [
+  {agent:"noor", text:"<b>Noor</b> checked the Aurora hero — readable, nothing broken.", time:"2m"},
+  {agent:"mira", text:"<b>Mira</b> finished the warmer Aurora headline. Ready for you.", time:"9m"},
+  {agent:"kai", text:"<b>Kai</b> rebuilt the Clarity chart to show growth.", time:"26m"}
+];
+let curProject = "aurora", selectedId = "a1", filter = "all", mode = "slider", compare = 58, agentFilter = null, toastTimer = null, simTimer = null, newColor = "#1D4ED8";
+const $ = id => document.getElementById(id);
+const proj = () => PROJECTS.find(p=>p.id===curProject);
+const task = () => proj().tasks.find(t=>t.id===selectedId) || proj().tasks[0];
+
+function toast(m){ const t=$("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),3200); }
+function statusWord(s){ return {review:'<span class="status-word">For you</span>', doing:'<span class="status-word doing">In progress</span>', done:'<span class="status-word done">Done</span>', todo:'<span class="status-word todo">Queued</span>'}[s]; }
+
+function renderProjects(){
+  $("projSeg").innerHTML = PROJECTS.map(p=>`<button data-p="${p.id}" class="${p.id===curProject?"on":""}" type="button">${p.name}</button>`).join("") + `<button data-new="1" class="new" type="button">+ New</button>`;
+  $("projSeg").querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{ curProject=b.dataset.p; selectedId=proj().tasks[0]?.id; simStop(); renderAll(); });
+  $("projSeg").querySelector("[data-new]").onclick=()=>$("projectOverlay").classList.add("open");
+  const p=proj(); $("projName").textContent=p.name; $("projType").textContent=`${p.kind} · ${TYPE_LABEL[p.type]}`; $("addr").textContent=p.addr;
+  $("frame").className="frame "+FRAME_FOR[p.type];
+}
+function renderTasks(){
+  const p=proj();
+  let items=p.tasks.filter(t=>filter==="all"||t.status===filter);
+  if(agentFilter) items=items.filter(t=>t.agent===agentFilter);
+  $("taskCount").textContent=p.tasks.length+" total";
+  $("taskList").innerHTML=items.length?items.map(t=>{const a=AGENTS[t.agent];return `<button class="task ${t.id===selectedId?"sel":""}" data-t="${t.id}" type="button">
+    <span class="dot dot-${t.status}"></span><span style="flex:1;min-width:0"><b>${t.title}</b><span>${a.name} · ${a.role}${t.status==="doing"?" · "+t.progress+"%":""}</span>
+    ${t.status==="doing"?`<span class="bar"><i style="width:${t.progress}%"></i></span>`:""}</span></button>`}).join("")
+   :'<div class="empty">Nothing here.<br>Add a request above.</div>';
+  $("taskList").querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>{selectedId=b.dataset.t;renderAll();});
+  document.querySelectorAll("#tabs button").forEach(b=>b.classList.toggle("on",b.dataset.f===filter));
+}
+function renderPreview(){
+  const p=proj(), r=RENDERERS[p.type];
+  $("layerBefore").innerHTML=r(p,"old"); const after=$("layerAfter"); after.innerHTML=r(p,"new");
+  const pct=mode==="before"?0:mode==="after"?100:compare;
+  after.style.clipPath=`inset(0 0 0 ${pct}%)`; after.style.display=pct===0?"none":"block";
+  const h=$("handle"); h.style.left=pct+"%"; h.style.display=mode==="slider"?"block":"none";
+  $("baRange").value=compare; $("baRange").style.display=mode==="slider"?"block":"none";
+  document.querySelectorAll("#modeSeg button").forEach(b=>b.classList.toggle("on",b.dataset.mode===mode));
+  const t=task();
+  $("pins").innerHTML=(t&&t.status==="review"&&mode!=="before")?t.pins.map((pin,i)=>`<button class="pin" style="left:${pin.x};top:${pin.y}" data-pin="${pin.t}" type="button">${i+1}</button>`).join(""):"";
+  $("pins").querySelectorAll("[data-pin]").forEach(b=>b.onclick=()=>toast(b.dataset.pin));
+  $("stageNote").textContent=t?(t.status==="review"?`“${t.title}” — drag to compare. Left is before, right is after.`:"Preview shows the current approved version. This request isn't visual yet."):"";
+}
+function renderReview(){
+  const t=task(), el=$("review"); if(!t){el.innerHTML="";return;}
+  const a=AGENTS[t.agent];
+  const foot = t.status==="review"
+    ?`<span class="checked">✓ Checked by Noor</span><span class="spacer"></span><button class="btn" id="tweakBtn" type="button">Ask for a tweak</button><button class="btn btn-primary" id="approveBtn" type="button">Approve</button>`
+    : t.status==="done" ? `<span class="checked">✓ Approved by you — live</span><span class="spacer"></span><button class="btn" id="undoBtn" type="button">Undo</button>`
+    : t.status==="doing" ? `<span style="font-size:12.5px;color:var(--sub)">${a.name} is working — ${t.progress}%. You'll review a visual when it's ready.</span>`
+    : `<span style="font-size:12.5px;color:var(--sub)">Queued for ${a.name}. Nothing ships without your approval.</span>`;
+  el.innerHTML=`<div style="display:flex;gap:10px;align-items:flex-start"><h3 style="flex:1">${t.title}</h3>${statusWord(t.status)}</div>
+    <p class="what">${t.what}</p><p class="why">${t.why}</p>
+    <div class="review-foot"><span class="avatars"><span class="av ${a.cls}">${a.ini}</span><span class="av av-noor">N</span></span><span class="who">${a.name} · ${a.role}</span></div>
+    <div class="review-foot">${foot}</div>`;
+  const ap=$("approveBtn"); if(ap) ap.onclick=()=>{t.status="done";FEED.unshift({agent:t.agent,text:`<b>You</b> approved “${t.title}” — live in ${proj().name}.`,time:"now"});toast("Approved. It's live.");renderAll();};
+  const tw=$("tweakBtn"); if(tw) tw.onclick=()=>{const n=prompt("What should change? Plain English is perfect.","");if(n){t.status="doing";t.progress=15;FEED.unshift({agent:"you",text:`<b>You</b> asked ${a.name} for a tweak: “${n}”`,time:"now"});toast(`Sent to ${a.name}.`);renderAll();}};
+  const un=$("undoBtn"); if(un) un.onclick=()=>{t.status="todo";t.progress=0;toast("Undone. The previous version is back.");renderAll();};
+}
+function renderTeam(){
+  $("agentList").innerHTML=Object.entries(AGENTS).map(([k,a])=>`<button class="agent ${agentFilter===k?"sel":""}" data-a="${k}" type="button">
+    <span class="av ${a.cls}">${a.ini}</span><span><b>${a.name}</b><span>${a.role} · ${a.now}</span></span>
+    <span class="st"><i style="background:${a.status==="Waiting"?"#C7C7CC":"var(--green)"}"></i>${a.status}</span></button>`).join("");
+  $("agentList").querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>{agentFilter=agentFilter===b.dataset.a?null:b.dataset.a;renderAll();if(agentFilter)toast(`Showing ${AGENTS[agentFilter].name}'s requests. Tap again for all.`);});
+  const n=proj().tasks.filter(t=>t.status==="review").length;
+  $("reviewBanner").innerHTML=n?`<button class="banner" id="bannerBtn" type="button"><b>${n} change${n>1?"s":""} waiting for you</b>Nothing ships until you approve it.</button>`:"";
+  const bb=$("bannerBtn"); if(bb) bb.onclick=()=>{const t=proj().tasks.find(x=>x.status==="review");if(t){selectedId=t.id;renderAll();}};
+  $("feed").innerHTML=FEED.slice(0,4).map(f=>`<p>${f.text} <time>· ${f.time}</time></p>`).join("");
+  $("liveText").textContent=Object.values(AGENTS).filter(a=>a.status==="Working"||a.status==="Checking").length+" working";
+}
+function renderAll(){ renderProjects(); renderTasks(); renderPreview(); renderReview(); renderTeam(); }
+
+/* compare */
+$("baRange").addEventListener("input",e=>{compare=+e.target.value;if(mode!=="slider")mode="slider";renderPreview();});
+let drag=false;
+$("stage").addEventListener("pointerdown",e=>{if(mode!=="slider")return; if(e.target.closest("button,input"))return; drag=true;move(e);});
+window.addEventListener("pointermove",e=>{if(drag)move(e);});
+window.addEventListener("pointerup",()=>drag=false);
+function move(e){const r=$("frame").getBoundingClientRect();compare=Math.max(0,Math.min(100,((e.clientX-r.left)/r.width)*100));renderPreview();}
+document.querySelectorAll("#modeSeg button").forEach(b=>b.onclick=()=>{mode=b.dataset.mode;renderPreview();});
+$("tabs").addEventListener("click",e=>{const b=e.target.closest("[data-f]");if(!b)return;filter=b.dataset.f;renderTasks();});
+
+/* modals */
+function openReq(){$("requestOverlay").classList.add("open");setTimeout(()=>$("reqText").focus(),60);}
+$("openRequest").onclick=openReq; $("addQuick").onclick=openReq;
+document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>b.closest(".overlay").classList.remove("open"));
+document.querySelectorAll(".overlay").forEach(o=>o.addEventListener("click",e=>{if(e.target===o)o.classList.remove("open");}));
+$("swatches").querySelectorAll("button").forEach(b=>b.onclick=()=>{newColor=b.dataset.c;$("swatches").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));});
+$("reqSubmit").onclick=()=>{
+  const text=$("reqText").value.trim(); if(!text){toast("Write one sentence first.");return;}
+  let who=$("reqAgent").value;
+  if(who==="auto") who=/look|colour|color|design|pretty|style|poster/i.test(text)?"mira":/check|test|bug|break/i.test(text)?"noor":"kai";
+  const t={id:"t"+Date.now(),title:text,agent:who,status:"todo",progress:0,what:"Your team will show you a visual here before anything ships.",why:"You asked for it — and nothing goes live without your approval.",pins:[]};
+  proj().tasks.unshift(t); selectedId=t.id; $("reqText").value=""; $("requestOverlay").classList.remove("open");
+  FEED.unshift({agent:who,text:`<b>${AGENTS[who].name}</b> picked up your request.`,time:"now"});
+  toast(`${AGENTS[who].name} is on it. You'll approve a visual first.`);
+  setTimeout(()=>{if(t.status==="todo"){t.status="doing";t.progress=12;renderAll();}},800);
+  renderAll();
+};
+$("npSubmit").onclick=()=>{
+  const name=$("npName").value.trim(); if(!name){toast("Give it a name first.");$("npName").focus();return;}
+  const type=$("npType").value; const desc=$("npDesc").value.trim()||"A new project, ready for your team.";
+  const p={id:"p"+Date.now(),name,short:name.split("—")[0].split("-")[0].trim(),kind:desc,type,addr:type==="app"?name+" · Phone":type==="poster"?"Print · Poster":name.toLowerCase().replace(/[^a-z]+/g,"")+".app",color:newColor,tint:"#F5F5F7",headline:"Your headline, reimagined.",sub:desc,
+    tasks:[{id:"t"+Date.now(),title:"First visual pass — layout & colour",agent:"mira",status:"doing",progress:20,what:"Mira is setting the first layout and colour mood on the blank canvas.",why:"Every project starts as a visual. You'll approve this direction before detail work.",pins:[]}]};
+  PROJECTS.push(p); curProject=p.id; selectedId=p.tasks[0].id; agentFilter=null;
+  $("projectOverlay").classList.remove("open"); $("npName").value=""; $("npDesc").value="";
+  toast(`Created. Mira is doing the first visual pass.`); renderAll();
+};
+/* watch them work */
+function simStop(){ if(simTimer){clearInterval(simTimer);simTimer=null;$("watchBtn").textContent="Watch them work";} }
+$("watchBtn").onclick=()=>{
+  if(simTimer){simStop();return;}
+  $("watchBtn").textContent="Pause";
+  simTimer=setInterval(()=>{
+    let active=false;
+    proj().tasks.forEach(t=>{ if(t.status==="doing"){active=true;t.progress=Math.min(100,t.progress+8);
+      if(t.progress>=100){t.status="review";t.pins=[{x:"50%",y:"140px",t:"Finished — take a look"}];FEED.unshift({agent:t.agent,text:`<b>${AGENTS[t.agent].name}</b> finished “${t.title}”. Ready for you.`,time:"now"});selectedId=t.id;toast(`${AGENTS[t.agent].name} finished. Tap a task to compare.`);} }});
+    if(active) renderAll(); else simStop();
+  },850);
+};
+renderAll();
+</script>
+</body>
+</html>
