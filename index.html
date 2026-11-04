@@ -50,6 +50,19 @@ header{position:sticky;top:0;z-index:60;background:var(--glass);backdrop-filter:
 .status-strip .checks{margin-left:auto;display:flex;gap:6px;flex:none;flex-wrap:wrap;justify-content:flex-end}
 .status-strip .check{font-size:11.5px;font-weight:650;color:#3A3A3C;background:rgba(120,120,128,.11);border-radius:999px;padding:4px 8px;white-space:nowrap}
 .status-strip .check.warn{color:#9A6700;background:rgba(255,159,10,.16)}
+.qsum{margin:2px 14px 10px;background:rgba(0,113,227,.07);border:1px solid rgba(0,113,227,.14);border-radius:14px;padding:12px 14px}
+.qsum .big{font-size:15px;font-weight:750;letter-spacing:-.01em;line-height:1.3}
+.qsum .now{font-size:12.5px;color:#3A3A3C;line-height:1.45;margin-top:3px}
+.qsum .bar{height:6px;margin-top:9px}.qsum .counts{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+.qsum .counts span{font-size:11px;font-weight:700;background:rgba(255,255,255,.75);border:1px solid var(--hair);border-radius:999px;padding:3px 8px;color:#3A3A3C}
+[data-theme="dark"] .qsum .now{color:#D1D1D6}[data-theme="dark"] .qsum .counts span{background:rgba(255,255,255,.08);color:var(--ink)}
+.abar{display:block;height:4px;background:rgba(120,120,128,.2);border-radius:99px;margin-top:5px;overflow:hidden;max-width:150px}
+.abar i{display:block;height:100%;background:var(--blue);border-radius:99px;transition:width .6s}
+.agent .st{font-size:11px;font-weight:750;padding:3px 9px;border-radius:999px;background:rgba(120,120,128,.13);color:var(--sub);white-space:nowrap}
+.agent .st.doing{background:rgba(0,113,227,.15);color:var(--blue)}
+.agent .st.review{background:rgba(255,159,10,.2);color:#9A6700}
+.agent .st.next{background:rgba(52,199,89,.15);color:#248A3D}
+.pct{font-size:11.5px;font-weight:750;color:var(--blue);white-space:nowrap}
 [data-theme="dark"] .status-strip{background:rgba(28,28,30,.72)}.status-strip .check{color:var(--ink)}
 .stage{background:#FBFBFD;border-top:1px solid var(--hair);padding:14px;display:flex;flex-direction:column;align-items:center;gap:10px;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;touch-action:none}
 .stage ::selection{background:transparent}
@@ -90,13 +103,20 @@ input.ba{width:min(420px,80%);accent-color:var(--blue)}
 .icon-pick svg{width:20px;height:20px}
 .icon-pick.on{box-shadow:0 0 0 2px var(--blue)}
 .av-mira{background:#E4573D}.av-kai{background:#0071E3}.av-noor{background:#30A46C}.av-leo{background:#8E8E93}.av-you{background:#1D1D1F}
-.agent b{font-size:13.5px;font-weight:600;display:block}.agent span{font-size:12px;color:var(--sub);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:118px}
-.agent .st{margin-left:auto;font-size:11.5px;color:var(--sub);white-space:nowrap}
+.agent b{font-size:13.5px;font-weight:600;display:block}.agent span{font-size:12px;color:var(--sub);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.agent .st{margin-left:auto}
 .feed{padding:4px 14px 14px}.feed-item{display:flex;gap:9px;padding:8px 4px;border-top:1px solid var(--hair);align-items:flex-start}.feed-item:first-child{border-top:0}.feed-item p{font-size:12.5px;color:#3A3A3C;line-height:1.45;margin:0}.feed-item p b{color:var(--ink)}.feed time{color:var(--faint);font-size:11.5px;white-space:nowrap}
 [data-theme="dark"] .feed-item p{color:#D1D1D6}
 .banner{margin:10px 12px 4px;background:#FFF8EC;border:1px solid rgba(255,159,10,.35);border-radius:14px;padding:11px 13px;font-size:12.5px;line-height:1.45;width:calc(100% - 24px);text-align:left}.banner b{display:block;font-size:13px}
-.overlay{position:fixed;inset:0;background:rgba(245,245,247,.5);backdrop-filter:blur(14px);z-index:80;display:none;place-items:center;padding:20px}.overlay.open{display:grid}
-.modal{background:var(--glass-strong);backdrop-filter:blur(24px) saturate(180%);border:1px solid var(--hair);border-radius:22px;box-shadow:var(--shadow-lg);width:min(480px,100%);padding:24px}
+.overlay{position:fixed;top:0;right:0;bottom:0;width:min(440px,94vw);z-index:80;visibility:hidden;transition:visibility 0s .38s;pointer-events:none}
+.overlay.open{visibility:visible;transition-delay:0s}
+.overlay .modal{transform:translateX(105%);transition:transform .36s cubic-bezier(.32,.72,.28,1);height:100%;overflow-y:auto;background:var(--glass-strong);backdrop-filter:blur(24px) saturate(180%);border-left:1px solid var(--hair);box-shadow:-24px 0 64px rgba(0,0,0,.16);padding:26px 24px 40px;pointer-events:auto}
+.overlay.open .modal{transform:translateX(0)}
+.overlay.from-left{right:auto;left:0}
+.overlay.from-left .modal{transform:translateX(-105%);border-left:0;border-right:1px solid var(--hair);box-shadow:24px 0 64px rgba(0,0,0,.16)}
+.overlay.from-left.open .modal{transform:translateX(0)}
+.sheet-x{float:right;border:0;background:rgba(120,120,128,.16);width:28px;height:28px;border-radius:50%;font-size:13px;line-height:1;display:grid;place-items:center;color:var(--ink)}
+.modal h3{font-size:19px;letter-spacing:-.02em}.modal p{font-size:13px;color:var(--sub);margin-top:5px;line-height:1.5}.modal label{font-size:12.5px;font-weight:700;display:block;margin:16px 0 6px}
 .modal h3{font-size:19px;letter-spacing:-.02em}.modal p{font-size:13px;color:var(--sub);margin-top:5px;line-height:1.5}.modal label{font-size:12.5px;font-weight:700;display:block;margin:16px 0 6px}
 .modal input,.modal textarea,.modal select{width:100%;border:1px solid rgba(0,0,0,.14);border-radius:11px;padding:10px 12px;font:inherit;font-size:14px;background:#fff}.modal textarea{min-height:74px;resize:vertical}
 .modal input:focus,.modal textarea:focus,.modal select:focus{outline:2px solid rgba(0,113,227,.35);border-color:var(--blue)}
@@ -157,6 +177,7 @@ input.ba{width:min(420px,80%);accent-color:var(--blue)}
 <main class="layout" id="mainLayout">
   <section class="card" aria-label="Requests">
     <div class="card-h"><h2>Requests</h2><span class="n" id="taskCount"></span><button class="link" id="addQuick" type="button">+ Add</button></div>
+    <div class="qsum" id="queueSummary"></div>
     <p style="padding:2px 18px 4px;font-size:12px;color:var(--sub);line-height:1.5">Your superagent orders this queue and assigns each step. Use ↑ ↓ to reorder.</p>
     <div id="taskGroups"></div>
   </section>
@@ -204,16 +225,19 @@ input.ba{width:min(420px,80%);accent-color:var(--blue)}
 
 <p class="foot-note">Real projects live in <b>projects/</b> on this machine — each with its own git history. Every Run is a commit. Viewing history never changes your project; Restore saves that step as a new step on top.</p>
 
-<div class="overlay" id="requestOverlay"><div class="modal" role="dialog" aria-modal="true">
+<div class="overlay from-left" id="requestOverlay"><div class="modal" role="dialog">
+  <button class="sheet-x" data-close type="button" aria-label="Close">✕</button>
   <h3>What should your team do?</h3><p>The superagent will order it and assign the right person. You'll see a visual before anything ships.</p>
   <label for="reqText">Your request</label><textarea id="reqText" placeholder="Make the headline “Coffee worth slowing down for” and use a warm orange…"></textarea>
   <label for="reqAgent">Who should do it?</label>
   <select id="reqAgent"><option value="">Let the superagent decide</option></select>
+  <label style="font-weight:600;line-height:1.45"><input type="checkbox" id="reqAutoRun" checked style="width:auto"> Run it right away after planning<span style="display:block;font-weight:400;color:var(--sub);font-size:12.5px;margin-top:3px">You still approve the picture before anything ships.</span></label>
   <p id="planNote" style="margin-top:12px"></p>
   <div class="row"><button class="btn" data-close type="button">Cancel</button><button class="btn btn-primary" id="reqSubmit" type="button">Send to team</button></div>
 </div></div>
 
-<div class="overlay" id="projectOverlay"><div class="modal" role="dialog" aria-modal="true">
+<div class="overlay" id="projectOverlay"><div class="modal" role="dialog">
+  <button class="sheet-x" data-close type="button" aria-label="Close">✕</button>
   <h3>Start a project — any project</h3><p>Anything that renders in a browser: a site, an app, a poster, a dashboard. Your team works on the real files.</p>
   <label for="npName">Project name</label><input id="npName" placeholder="e.g. Bloom — flower shop">
   <label for="npType">What is it? (optional — Muse can decide)</label>
@@ -238,7 +262,8 @@ input.ba{width:min(420px,80%);accent-color:var(--blue)}
 </div></div>
 
 <!-- Agent editor -->
-<div class="overlay" id="agentOverlay"><div class="modal" role="dialog" aria-modal="true">
+<div class="overlay" id="agentOverlay"><div class="modal" role="dialog">
+  <button class="sheet-x" data-close type="button" aria-label="Close">✕</button>
   <h3 id="agTitle">Teammate</h3><p>They'll appear everywhere work is assigned. The superagent reads their role and strengths to route requests.</p>
   <label for="agName">Name</label><input id="agName" placeholder="e.g. Sofia">
   <label for="agRole">Role</label><input id="agRole" placeholder="e.g. Designer, Builder, Checker, Tester, Illustrator…">
@@ -283,12 +308,25 @@ const selTask = () => pTasks().find(t=>t.id===selectedId) || queue()[0] || pTask
 const bust = () => Date.now();
 function fmtDur(ms){ if(!ms || ms < 0) ms = 0; const s = Math.floor(ms / 1000); const h = Math.floor(s / 3600); const m = Math.floor((s % 3600) / 60); const ss = String(s % 60).padStart(2, "0"); return h ? `${h}:${String(m).padStart(2, "0")}:${ss}` : `${m}:${ss}`; }
 function fmtTime(ts){ return ts ? new Date(ts).toLocaleTimeString([], {hour:"numeric", minute:"2-digit"}) : ""; }
+function dispProg(t){ if(!t || t.status !== "doing") return t?.progress || 0; const base = t.progress || 10; const since = Date.now() - (t.phaseAt || t.startedAt || Date.now()); return Math.min(95, base + Math.floor(Math.max(0, since) / 5000) * 3); }
+function renderQueueSummary(){
+  const el = $("queueSummary"); if(!el) return;
+  const ts = pTasks(); const total = ts.length;
+  const done = ts.filter(t=>t.status==="done").length, review = ts.filter(t=>t.status==="review").length, doing = ts.find(t=>t.status==="doing"), queued = ts.filter(t=>t.status==="todo").length;
+  const pctDone = total ? Math.round((done / total) * 100) : 0;
+  let big, now, barPct;
+  if (doing) { const a = S.agents[doing.agent] || FALLBACK_A; big = `${a.name} is working now`; now = `${doing.phase || "Working on the files"} · “${doing.title}” · <span class="js-elapsed" data-start="${doing.startedAt || Date.now()}">${fmtDur(Date.now() - (doing.startedAt || Date.now()))}</span>`; barPct = dispProg(doing); }
+  else if (review) { big = `${review} step${review > 1 ? "s" : ""} waiting for your eyes`; now = "Nothing ships until you approve it — check the picture in the middle."; barPct = pctDone; }
+  else if (total && done === total) { big = "All steps approved"; now = "Your team is idle. Add a request whenever you're ready."; barPct = 100; }
+  else { const next = queue().find(t=>t.status==="todo"); big = total ? `${done} of ${total} steps approved` : "No requests yet"; now = next ? `Next up: “${next.title}” (${(S.agents[next.agent] || FALLBACK_A).name})` : "Add a request and your superagent will order it."; barPct = pctDone; }
+  el.innerHTML = `<div class="big">${big}</div><div class="now">${now}</div><span class="bar"><i data-progbase="${doing ? (doing.progress || 10) : barPct}" data-phaseat="${doing ? (doing.phaseAt || doing.startedAt || Date.now()) : ""}" style="width:${barPct}%"></i></span><div class="counts"><span>✓ ${done} done</span><span>! ${review} for you</span><span>● ${doing ? 1 : 0} working</span><span>${queued} queued</span></div>`;
+}
 function renderStatus(){
   const p = proj(), el = $("statusStrip"); if(!p || !el) return;
   const ts = pTasks(); const doing = ts.find(t=>t.status==="doing"); const review = ts.find(t=>t.status==="review"); const sel = selTask(); const next = queue().find(t=>t.status==="todo");
   const doneCount = ts.filter(t=>t.status==="done").length; const savedCount = (p.history || []).length;
   let cls = "ok", title = "Ready", sub = next ? `Next up: “${next.title}” (${(S.agents[next.agent]||FALLBACK_A).name})` : "Nothing is queued right now.";
-  if (doing) { cls = "doing"; title = `${(S.agents[doing.agent]||FALLBACK_A).name} is working · <span class="js-elapsed" data-start="${doing.startedAt || Date.now()}">${fmtDur(Date.now() - (doing.startedAt || Date.now()))}</span>`; sub = doing.phase || "Working on the real files — this updates as phases change."; }
+  if (doing) { cls = "doing"; title = `${(S.agents[doing.agent]||FALLBACK_A).name} is working · <span data-progtext data-progbase="${doing.progress || 10}" data-phaseat="${doing.phaseAt || doing.startedAt || Date.now()}">${dispProg(doing)}%</span> · <span class="js-elapsed" data-start="${doing.startedAt || Date.now()}">${fmtDur(Date.now() - (doing.startedAt || Date.now()))}</span>`; sub = doing.phase || "Working on the real files — this updates as phases change."; }
   else if (sel?.status === "todo" && sel.error) { cls = "bad"; title = "Stopped before finishing"; sub = sel.error; }
   else if (review) { cls = "review"; title = "Ready for your eyes"; sub = `“${review.title}” is waiting — approve it above the review card when it looks right.`; }
   else if (p.build?.running) { cls = "doing"; title = "Building now…"; sub = "The build is running on this Mac; the picture updates when it finishes."; }
@@ -300,7 +338,7 @@ function renderStatus(){
   el.className = `status-strip ${cls}`;
   el.innerHTML = `<span class="dot"></span><div class="main"><span class="title">${title}</span><div class="sub">${sub}</div></div>${checks}`;
 }
-setInterval(()=>{ document.querySelectorAll(".js-elapsed").forEach(el=>{ el.textContent = fmtDur(Date.now() - Number(el.dataset.start || Date.now())); }); }, 1000);
+setInterval(()=>{ document.querySelectorAll(".js-elapsed").forEach(el=>{ el.textContent = fmtDur(Date.now() - Number(el.dataset.start || Date.now())); }); document.querySelectorAll("[data-progbase]").forEach(el=>{ const base = Number(el.dataset.progbase || 10); const at = Number(el.dataset.phaseat || 0); const pct = at ? Math.min(95, base + Math.floor(Math.max(0, Date.now() - at) / 5000) * 3) : base; if (el.dataset.progtext !== undefined) el.textContent = pct + "%"; else el.style.width = pct + "%"; }); }, 1000);
 function toast(m){ const t=$("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),3400); }
 async function api(path, method="GET", body){
   const r = await fetch(path, { method, headers: body?{"Content-Type":"application/json"}:undefined, body: body?JSON.stringify(body):undefined });
@@ -348,7 +386,7 @@ function taskRow(t, qn){
   return `<button class="task ${t.id===selectedId?"sel":""}" data-t="${t.id}" type="button">
     <span class="qnum ${t.status==="review"?"review":t.status==="done"?"done":""}">${t.status==="done"?"✓":t.status==="review"?"!":qn}</span>
     <span style="flex:1;min-width:0"><b>${t.title}</b><span>${a.name} · ${a.role}${t.status==="doing"?` · ${t.phase || "working"} · <span class="js-elapsed" data-start="${t.startedAt || Date.now()}">${fmtDur(Date.now() - (t.startedAt || Date.now()))}</span>`:""}${t.status==="todo"&&t.error?" · stopped — run again":""}${t.executorNote?" · local edit":""}</span>${t.executor?`<span>${t.executor.replace("muse:","Muse ")}${t.tokens?` · ${(t.tokens/1000).toFixed(1)}k tokens`:""}${t.diff?` · +${t.diff.add} −${t.diff.del} lines`:""}</span>`:""}
-    ${t.status==="doing"?`<span class="bar"><i style="width:${t.progress}%"></i></span>`:""}</span>
+    ${t.status==="doing"?`<span style="display:flex;align-items:center;gap:8px;margin-top:6px"><span class="bar" style="flex:1;margin-top:0"><i data-progbase="${t.progress || 10}" data-phaseat="${t.phaseAt || t.startedAt || Date.now()}" style="width:${dispProg(t)}%"></i></span><span class="pct" data-progtext data-progbase="${t.progress || 10}" data-phaseat="${t.phaseAt || t.startedAt || Date.now()}">${dispProg(t)}%</span></span>`:""}</span>
     ${t.status==="todo"?`<span><span class="mini" data-up="${t.id}" title="Move up">↑</span><span class="mini" data-down="${t.id}" title="Move down">↓</span></span>`:""}
   </button>`;
 }
@@ -448,20 +486,24 @@ function renderReview(){
   const un=$("undoBtn"); if(un) un.onclick=async()=>{ if(!confirm("Undo this step? The previous version comes back as a new step.")) return; await api(`/api/tasks/${t.id}/undo`,"POST",{}); viewingHash=null; await load(true); toast("Undone — previous version is back."); };
   const tw=$("tweakBtn"); if(tw) tw.onclick=async()=>{ const n=prompt("What should change? Plain English is perfect.",""); if(!n) return; const nt=await api(`/api/projects/${curProject}/tasks`,"POST",{text:`Tweak “${t.title}”: ${n}`, agent:t.agent}); selectedId=nt.id; await load(); toast(`Tweak queued for ${a.name}, position ${queue().findIndex(x=>x.id===nt.id)+1}.`); };
 }
-async function runSelected(){
-  const t=selTask(); if(!t||busy) return;
-  busy=true; renderReview(); renderTasks();
+async function runTaskById(id){
+  const t=S.tasks.find(x=>x.id===id); if(!t||busy) return;
+  selectedId=t.id; busy=true; renderAll();
   toast(`${S.agents[t.agent].name} (Muse Spark) is working on the real files…`);
   const started=Date.now(); const timer=setInterval(()=>{ const b=$("runBtn"); if(b) b.textContent=`Working… ${Math.round((Date.now()-started)/1000)}s`; },1000);
-  try{ const done=await api(`/api/tasks/${t.id}/run`,"POST",{}); selectedId=done.id; await load(true); toast(done.status==="review"?"Done — drag Compare to see the change.":"That step didn't finish. Check the card."); }
+  try{ const done=await api(`/api/tasks/${t.id}/run`,"POST",{}); selectedId=done.id; await load(true); toast(done.status==="review"?"Done — look at the picture in the middle, then approve.":"That step didn't finish. Check the status strip."); }
   catch(e){ toast(e.message); await load(); }
   clearInterval(timer); busy=false; renderAll();
 }
+async function runSelected(){ const t=selTask(); if(t) return runTaskById(t.id); }
 function renderTeam(){
   const counts={}; pTasks().forEach(t=>{counts[t.agent]=(counts[t.agent]||0)+1;});
   $("agentList").innerHTML=Object.entries(S.agents).map(([k,a])=>{
-    const mine=pTasks().filter(t=>t.agent===k); const doing=mine.find(t=>t.status==="doing"); const next=mine.find(t=>t.status==="todo");
-    return `<div class="agent ${agentFilter===k?"sel":""}" data-a="${k}" role="button" tabindex="0">${avHTML(a)}<span><b>${a.name}</b><span>${a.role} · ${doing?"on: "+doing.title:next?"next: "+next.title:"free"}</span></span><span class="st">${doing?"● working":next?"queued":"free"}</span><button class="mini" data-edit="${k}" type="button" title="Edit ${a.name}">✎</button></div>`;
+    const mine=pTasks().filter(t=>t.agent===k); const doing=mine.find(t=>t.status==="doing"); const mineReview=mine.find(t=>t.status==="review"); const next=mine.find(t=>t.status==="todo"); const myDone=mine.filter(t=>t.status==="done").length;
+    const stCls = doing ? "doing" : mineReview ? "review" : next ? "next" : "";
+    const stTxt = doing ? `Working · <span class="js-elapsed" data-start="${doing.startedAt || Date.now()}">${fmtDur(Date.now() - (doing.startedAt || Date.now()))}</span>` : mineReview ? "For you" : next ? "Next up" : myDone ? `${myDone} done` : "Free";
+    const sub = doing ? `${a.role} · ${doing.phase || "working"} · <span data-progtext data-progbase="${doing.progress || 10}" data-phaseat="${doing.phaseAt || doing.startedAt || Date.now()}">${dispProg(doing)}%</span>` : mineReview ? `${a.role} · waiting for your approval` : next ? `${a.role} · next: ${next.title}` : `${a.role} · ${myDone ? myDone + " approved" : "free"}`;
+    return `<div class="agent ${agentFilter===k?"sel":""}" data-a="${k}" role="button" tabindex="0">${avHTML(a)}<span style="flex:1;min-width:0"><b>${a.name}</b><span>${sub}</span>${doing?`<span class="abar"><i data-progbase="${doing.progress || 10}" data-phaseat="${doing.phaseAt || doing.startedAt || Date.now()}" style="width:${dispProg(doing)}%"></i></span>`:""}</span><span class="st ${stCls}">${stTxt}</span><button class="mini" data-edit="${k}" type="button" title="Edit ${a.name}">✎</button></div>`;
   }).join("");
   $("agentList").querySelectorAll("[data-a]").forEach(b=>b.onclick=e=>{ if(e.target.closest("[data-edit]")) return; agentFilter=agentFilter===b.dataset.a?null:b.dataset.a; renderAll(); });
   $("agentList").querySelectorAll("[data-edit]").forEach(b=>b.onclick=e=>{ e.stopPropagation(); openAgentEditor(b.dataset.edit); });
@@ -474,7 +516,7 @@ function renderTeam(){
   $("feed").innerHTML=S.feed.slice(0,7).map(f=>{ const fa=S.agents[f.agent]; const who=fa?fa.name:(f.agent==="you"?"You":"Team"); const text=f.text.includes("<b>")?f.text:`<b>${who}</b> ${f.text}`; return `<div class="feed-item">${fa?avHTML(fa,true):'<span class="av av-sm" style="background:#1D1D1F"><span style="font-size:11px;font-weight:800">You</span></span>'}<p>${text} <time>· ${new Date(f.at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</time></p></div>`; }).join("")||`<p style="font-size:12.5px;color:var(--sub);padding:6px 4px">Quiet for now.</p>`;
   $("liveText").textContent = pTasks().some(t=>t.status==="doing") ? "Working now" : "Team ready";
 }
-function renderAll(){ if(!S) return; try { if(curProject) localStorage.setItem("mm-project", curProject); if(selectedId) localStorage.setItem("mm-selected", selectedId); } catch(e) { /* private mode */ } const empty=S.projects.length===0; $("onboard").style.display=empty?"block":"none"; $("mainLayout").style.display=empty?"none":"grid"; $("projbar").style.display=empty?"none":"flex"; document.querySelector(".foot-note").style.display=empty?"none":"block"; if(empty){ const b=$("brainBadge"); b.textContent=S.brain.label; b.classList.add("ai"); document.title="Muse Maker — See what your agents built"; return; } renderProjects(); renderTasks(); renderStatus(); renderPreview(); renderReview(); renderTeam(); renderTemplates();
+function renderAll(){ if(!S) return; try { if(curProject) localStorage.setItem("mm-project", curProject); if(selectedId) localStorage.setItem("mm-selected", selectedId); } catch(e) { /* private mode */ } const empty=S.projects.length===0; $("onboard").style.display=empty?"block":"none"; $("mainLayout").style.display=empty?"none":"grid"; $("projbar").style.display=empty?"none":"flex"; document.querySelector(".foot-note").style.display=empty?"none":"block"; if(empty){ const b=$("brainBadge"); b.textContent=S.brain.label; b.classList.add("ai"); document.title="Muse Maker — See what your agents built"; return; } renderProjects(); renderTasks(); renderQueueSummary(); renderStatus(); renderPreview(); renderReview(); renderTeam(); renderTemplates();
   const n=pTasks().filter(t=>t.status==="review").length; document.title=n?`(${n}) Muse Maker — needs your eyes`:"Muse Maker — See what your agents built"; }
 
 /* compare */
@@ -568,13 +610,15 @@ $("swatches").querySelectorAll("button").forEach(b=>b.onclick=()=>{newColor=b.da
 $("reqSubmit").onclick=async()=>{
   const text=$("reqText").value.trim(); if(!text){ toast("Write one sentence first."); return; }
   const btn=$("reqSubmit"); btn.disabled=true; btn.textContent="Superagent is planning…";
+  const autoRun=$("reqAutoRun").checked; try{ localStorage.setItem("mm-autorun", autoRun?"1":"0"); }catch(e){}
   try{
     const t=await api(`/api/projects/${curProject}/tasks`,"POST",{text, agent:$("reqAgent").value||undefined});
-    const pos=queue().length+1; selectedId=t.id;
+    selectedId=t.id;
     await load();
     const posNow=queue().findIndex(x=>x.id===t.id)+1;
-    toast(`Assigned to ${S.agents[t.agent].name} (${S.agents[t.agent].role}) · queue position ${posNow||pos}.`);
     $("requestOverlay").classList.remove("open"); $("reqText").value="";
+    if(autoRun){ toast(`Assigned to ${S.agents[t.agent].name} — starting now.`); btn.disabled=false; btn.textContent="Send to team"; await runTaskById(t.id); return; }
+    toast(`Assigned to ${S.agents[t.agent].name} (${S.agents[t.agent].role}) · queue position ${posNow}. Press ▶ Run when ready.`);
   }catch(e){ $("planNote").textContent=e.message; }
   btn.disabled=false; btn.textContent="Send to team";
 };
