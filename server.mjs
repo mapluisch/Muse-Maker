@@ -231,6 +231,32 @@ async function createProject({ name, type, color, desc, template }) {
   state.tasks.push(first); save();
   return { project: p, initialCommit: hash };
 }
+function usageOf(projectId) {
+  return state.tasks.filter((x) => x.projectId === projectId).reduce((n, x) => n + (x.tokens || 0) + (x.planTokens || 0) + (x.check?.tokens || 0), 0);
+}
+/* Import an existing project folder (the millions-of-users case: they already have one).
+   Copies it into projects/ (node_modules and oversized files skipped), keeps its git history if it has one. */
+async function importProject({ sourcePath, name }) {
+  const src = path.resolve(sourcePath || "");
+  if (!sourcePath || !fs.existsSync(src) || !fs.statSync(src).isDirectory()) throw new Error("That folder doesn't exist on this machine.");
+  if (src.startsWith(PROJECTS_DIR)) throw new Error("That folder is already inside Muse Maker.");
+  const entries = fs.readdirSync(src);
+  const entry = entries.includes("index.html") ? "index.html" : entries.find((f) => f.endsWith(".html"));
+  if (!entry) throw new Error("No .html file found there — Muse Maker renders browser projects (an index.html entry point).");
+  const displayName = (name || path.basename(src)).trim();
+  const p = { id: uid("p"), dir: slug(displayName) + "-" + Date.now().toString(36), name: displayName, type: "website", color: "#0071E3", desc: "Imported from " + src, importedFrom: src, createdAt: Date.now(), budget: 0 };
+  const dir = projDir(p); fs.mkdirSync(dir, { recursive: true });
+  fs.cpSync(src, dir, { recursive: true, filter: (s) => { const rel = path.relative(src, s); if (rel.split(path.sep).includes("node_modules")) return false; try { if (fs.statSync(s).isFile() && fs.statSync(s).size > 5 * 1024 * 1024) return false; } catch { return false; } return true; } });
+  if (entry !== "index.html") fs.copyFileSync(path.join(dir, entry), path.join(dir, "index.html"));
+  const hasGit = fs.existsSync(path.join(dir, ".git"));
+  if (!hasGit) { await gitInit(dir); await commitAll(dir, "Muse Maker: project imported"); }
+  else {
+    try { await git(dir, ["config", "user.email", "team@musemaker.local"]); await git(dir, ["config", "user.name", "Muse Maker"]); if (!(await history(p)).length) await commitAll(dir, "Muse Maker: project imported"); else if ((await git(dir, ["status", "--porcelain"])).trim()) await commitAll(dir, "Muse Maker: import snapshot"); } catch { /* keep as-is */ }
+  }
+  state.projects.push(p); feed("kai", `<b>${p.name}</b> imported. It's rendered in the middle — add a request to start improving it.`);
+  state.tasks.push({ id: uid("t"), projectId: p.id, title: "First look — suggest what to improve first", agent: "mira", status: "todo", progress: 0, priority: 1, reason: "Imported projects start with a look before changes.", what: "Mira will review the imported page and propose a first visual improvement.", why: "You approve the direction before anything changes.", commit: null, createdAt: Date.now(), brain: "local" });
+  save(); return { project: p };
+}
 function queueOf(projectId) {
   return state.tasks.filter((t) => t.projectId === projectId && (t.status === "todo" || t.status === "doing"))
     .sort((a, b) => (a.priority - b.priority) || (a.createdAt - b.createdAt));
@@ -247,13 +273,18 @@ async function probeMuse() {
   catch { MUSE_OK = false; console.log("Muse CLI not found — local fallback edits will run. Install Muse / run `muse login`."); }
 }
 const running = new Set();
+const runningProjects = new Set();
 async function runTask(t) {
-  if (running.has(t.id)) return t; running.add(t.id);
-  const p = projById(t.projectId); const dir = projDir(p); const file = path.join(dir, "index.html");
+  if (running.has(t.id)) return t;
+  const p = projById(t.projectId);
+  if (runningProjects.has(t.projectId)) { t.error = "Another step is already running on this project — wait for it to finish so history stays clean."; save(); return t; }
+  running.add(t.id); runningProjects.add(t.projectId);
+  const dir = projDir(p); const file = path.join(dir, "index.html");
   try {
     t.status = "doing"; t.progress = 40; save();
     const before = fs.readFileSync(file, "utf8");
-    const result = await runMuseWorker(t, p, dir);
+    const overBudget = p.budget > 0 && usageOf(p.id) >= p.budget;
+    const result = overBudget ? null : await runMuseWorker(t, p, dir);
     let changed = false;
     try { changed = (await git(dir, ["status", "--porcelain"])).trim().length > 0; } catch { changed = false; }
     let valid = false;
@@ -331,8 +362,10 @@ const server = http.createServer(async (req, res) => {
   } catch (e) { return send(res, 500, { error: String(e.message || e) }); }
 });
 
-/* seed one real project so first load is already real */
-if (!state.projects.length) {
+/* Seed one starter project only on the very first run ever (no state file yet).
+   After that, an empty project list is the user's choice and stays empty. */
+const hadStateFile = fs.existsSync(STATE_FILE);
+if (!hadStateFile && !state.projects.length) {
   await createProject({ name: "Aurora — Coffee brand", type: "website", color: "#9A3412", desc: "Small-batch beans from farms we know by name, roasted the week they ship." });
 }
 probeMuse();
